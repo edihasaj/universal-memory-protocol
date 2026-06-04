@@ -18,6 +18,6 @@ export function contentId(record: MemoryRecord): string {
   return "urn:amp:" + hash.slice(hash.indexOf(":") + 1);
 }
 
-export function isOmpId(value: string): boolean {
+export function isAmpId(value: string): boolean {
   return /^urn:amp:[a-z2-7]+$/.test(value);
 }

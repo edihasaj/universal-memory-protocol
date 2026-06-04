@@ -20,6 +20,15 @@ import type {
 } from "./types.ts";
 import { AMP_VERSION, AmpError } from "./types.ts";
 import type { MemoryStore } from "./store.ts";
+import { validateDraft } from "./validate.ts";
+
+/** A record-change event emitted to `subscribe` listeners (SPEC §3.8). */
+export interface ChangeEvent {
+  type: "created" | "merged" | "revised" | "tombstoned";
+  id: string;
+  record: MemoryRecord;
+}
+export type ChangeListener = (e: ChangeEvent) => void;
 
 export interface AmpServerOptions {
   name: string;
@@ -38,6 +47,7 @@ export interface AmpServerOptions {
 
 export class AmpServer {
   private store: MemoryStore;
+  private listeners = new Set<{ scope?: Partial<MemoryRecord["scope"]>; fn: ChangeListener }>();
   private opts: Required<Omit<AmpServerOptions, "key" | "onFeedback" | "store">> &
     Pick<AmpServerOptions, "key" | "onFeedback">;
 
@@ -86,6 +96,10 @@ export class AmpServer {
   }
 
   async remember(draft: MemoryDraft): Promise<RememberResponse> {
+    // Structural validation against AMP 0.1 (SPEC §2).
+    const problems = validateDraft(draft);
+    if (problems.length) throw new AmpError("invalid_record", problems.join("; "));
+
     let record = this.materialize(draft);
 
     // Consent: refuse to store non-exportable public records (policy example).
@@ -104,11 +118,13 @@ export class AmpServer {
     if (dup) {
       const merged = this.mergeEvidence(dup, record);
       await this.store.put(merged);
+      this.emit({ type: "merged", id: merged.id, record: merged });
       return { id: merged.id, result: "merged" };
     }
 
     record = this.finalize(record);
     await this.store.put(record);
+    this.emit({ type: "created", id: record.id, record });
     return { id: record.id, result: "created" };
   }
 
@@ -145,6 +161,7 @@ export class AmpServer {
     };
     await this.store.put(this.finalize(closed));
 
+    this.emit({ type: "revised", id: successor.id, record: successor });
     return { id: successor.id, supersedes: successor.supersedes ?? [] };
   }
 
@@ -158,7 +175,9 @@ export class AmpServer {
         lifecycle: { ...prior.lifecycle, status: "tombstoned" },
         integrity: undefined,
       };
-      await this.store.put(this.finalize(shell));
+      const e = this.finalize(shell);
+      await this.store.put(e);
+      this.emit({ type: "tombstoned", id: e.id, record: e });
       return { result: "erased" };
     }
     const tombstoned: MemoryRecord = {
@@ -167,7 +186,9 @@ export class AmpServer {
       time: { ...prior.time, valid_to: prior.time.valid_to ?? this.iso() },
       integrity: undefined,
     };
-    await this.store.put(this.finalize(tombstoned));
+    const t = this.finalize(tombstoned);
+    await this.store.put(t);
+    this.emit({ type: "tombstoned", id: t.id, record: t });
     return { result: "tombstoned" };
   }
 
@@ -177,7 +198,28 @@ export class AmpServer {
     return { ok: true };
   }
 
+  /**
+   * Subscribe to record changes in an optional scope (SPEC §3.8). Returns an
+   * unsubscribe function. Bindings adapt this to MCP notifications / SSE.
+   */
+  subscribe(
+    fn: ChangeListener,
+    scope?: Partial<MemoryRecord["scope"]>,
+  ): () => void {
+    const entry = { scope, fn };
+    this.listeners.add(entry);
+    return () => this.listeners.delete(entry);
+  }
+
   // ── internals ───────────────────────────────────────────────────────
+
+  private emit(e: ChangeEvent): void {
+    for (const l of this.listeners) {
+      if (scopeMatches(l.scope, e.record.scope)) {
+        try { l.fn(e); } catch { /* listener errors never break a write */ }
+      }
+    }
+  }
 
   private iso(): string {
     return this.opts.now().toISOString();
@@ -238,4 +280,15 @@ export class AmpServer {
     };
     return this.finalize(merged);
   }
+}
+
+/** Does a subscription filter (subset) match a record's scope? */
+function scopeMatches(
+  filter: Partial<MemoryRecord["scope"]> | undefined,
+  scope: MemoryRecord["scope"],
+): boolean {
+  if (!filter) return true;
+  return (Object.keys(filter) as (keyof MemoryRecord["scope"])[]).every(
+    (k) => filter[k] === undefined || filter[k] === scope[k],
+  );
 }

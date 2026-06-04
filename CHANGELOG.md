@@ -36,9 +36,21 @@ First cut of the Agent Memory Protocol: spec + working L3 reference implementati
   field, URNs (`urn:amp:`), MCP tools (`amp.*`), file ext (`*.amp.json/.md`),
   and package (`@amp/core`) all renamed. Domain target: agentmemoryprotocol.io.
 
+### L3 hardening
+- Capability-scoped access tokens (`src/capability.ts`): mint/verify/authorize
+  verbs × scope × expiry, signed by the owner DID; enforced in the HTTP binding.
+- `subscribe` op (`AmpServer.subscribe`) + Server-Sent-Events stream
+  (`GET /amp/subscribe`) for live multi-agent sharing.
+- `.well-known/amp.json` discovery manifest (`src/wellknown.ts` + HTTP route).
+- Structural record validation (`src/validate.ts`) enforced on `remember`.
+
+### Conformance suite
+- `runConformance()` + `pnpm conformance <url>` CLI: probes an endpoint and
+  reports the highest level satisfied with a badge (`AMP 0.1 / L3`).
+
 ### Tests
-- 20 conformance + binding tests passing; `tsc --noEmit` clean.
+- 28 conformance + binding + L3 tests passing; `tsc --noEmit` clean. The
+  reference HTTP server self-certifies **L3** via the conformance runner.
 
 ### Next
 - Recall `--amp` mode (the richer, production conforming server) per ADOPTION §2.
-- `subscribe` op + capability-token enforcement; `.well-known/amp.json` discovery.

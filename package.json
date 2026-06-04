@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "serve": "node --experimental-strip-types src/bin/serve.ts"
+    "serve": "node --experimental-strip-types src/bin/serve.ts",
+    "conformance": "node --experimental-strip-types src/bin/conformance.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

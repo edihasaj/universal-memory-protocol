@@ -11,10 +11,24 @@ export {
   verify,
   type KeyPair,
 } from "./integrity.ts";
-export { randomId, contentId, isOmpId } from "./id.ts";
+export { randomId, contentId, isAmpId } from "./id.ts";
 export { InMemoryStore, type MemoryStore } from "./store.ts";
-export { AmpServer, type AmpServerOptions } from "./server.ts";
+export {
+  AmpServer,
+  type AmpServerOptions,
+  type ChangeEvent,
+  type ChangeListener,
+} from "./server.ts";
 export { rehydrate, type RehydrateOptions } from "./rehydrate.ts";
+export { validateDraft, isValidDraft } from "./validate.ts";
+export {
+  mintCapability,
+  verifyCapability,
+  allows,
+  type CapabilityClaims,
+  type CapabilityVerb,
+} from "./capability.ts";
+export { buildWellKnown, type WellKnownManifest } from "./wellknown.ts";
 export * as file from "./bindings/file.ts";
 export { createMcpServer } from "./bindings/mcp.ts";
 export {
