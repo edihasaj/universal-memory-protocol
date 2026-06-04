@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmemoryprotocol.org/schema/0.1/record.json",
+  "title": "AMP Memory Record",
+  "description": "Agent Memory Protocol 0.1 — the portable memory record (SPEC §2).",
+  "type": "object",
+  "required": ["amp", "id", "kind", "body", "scope", "time"],
+  "additionalProperties": false,
+  "properties": {
+    "amp": { "const": "0.1" },
+    "id": { "type": "string", "pattern": "^urn:amp:[a-z2-7]+$" },
+    "kind": {
+      "enum": ["semantic", "episodic", "procedural", "working", "identity"]
+    },
+    "body": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string" },
+        "structured": { "type": "object" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["owner", "visibility"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": { "type": "string", "description": "operator DID" },
+        "user": { "type": "string" },
+        "project": { "type": "string" },
+        "agent": { "type": "string" },
+        "session": { "type": "string" },
+        "visibility": { "enum": ["private", "shared", "public"] }
+      }
+    },
+    "time": {
+      "type": "object",
+      "required": ["created"],
+      "additionalProperties": false,
+      "properties": {
+        "created": { "type": "string", "format": "date-time" },
+        "observed": { "type": "string", "format": "date-time" },
+        "valid_from": { "type": "string", "format": "date-time" },
+        "valid_to": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "salience": { "type": "number", "minimum": 0, "maximum": 1 },
+        "decay": { "type": "string" },
+        "status": { "enum": ["active", "candidate", "tombstoned"] }
+      }
+    },
+    "supersedes": { "type": "array", "items": { "type": "string" } },
+    "superseded_by": { "type": "array", "items": { "type": "string" } },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "target"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string" },
+          "target": { "type": "string" }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["actor", "actor_kind", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "actor": { "type": "string" },
+        "actor_kind": {
+          "enum": ["user", "agent", "model", "import", "scan"]
+        },
+        "method": { "type": "string" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ref": { "type": "string" },
+            "provider": { "type": "string" }
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ref"],
+            "additionalProperties": false,
+            "properties": {
+              "ref": { "type": "string" },
+              "weight": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retention": { "type": "string", "description": "ISO-8601 duration" },
+        "exportable": { "type": "boolean" },
+        "redact": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["content_hash", "signature", "signer"],
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": { "type": "string", "pattern": "^blake3:" },
+        "signature": { "type": "string", "pattern": "^ed25519:" },
+        "signer": { "type": "string", "pattern": "^did:" }
+      }
+    }
+  }
+}

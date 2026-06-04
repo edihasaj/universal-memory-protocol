@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AMP">
+  <defs>
+    <linearGradient id="amp" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5436"/>
+      <stop offset="1" stop-color="#FFAE3C"/>
+    </linearGradient>
+  </defs>
+  <!-- engram: a memory trace — nodes linked into a persistent edge -->
+  <path d="M7 22 L13 10 L19 18 L25 8" stroke="url(#amp)" stroke-width="2.4"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="7" cy="22" r="2.6" fill="url(#amp)"/>
+  <circle cx="19" cy="18" r="2.2" fill="url(#amp)"/>
+  <circle cx="25" cy="8" r="2.6" fill="url(#amp)"/>
+  <circle cx="13" cy="10" r="1.8" fill="#FFAE3C"/>
+</svg>
