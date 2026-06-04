@@ -150,7 +150,7 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-// lowercase base32 (a-z2-7) of a utf-8 string — matches urn:amp:<base32>,
+// lowercase base32 (a-z2-7) of a utf-8 string - matches urn:amp:<base32>,
 // stable and reversible so Recall uuids round-trip through AMP ids.
 function base32(s: string): string {
   return base32nopad.encode(new TextEncoder().encode(s)).toLowerCase();

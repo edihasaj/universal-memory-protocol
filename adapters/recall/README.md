@@ -10,9 +10,9 @@ tests anywhere. The real `recall amp` command supplies the backend.
 
 ## Files
 
-- `map.ts` — pure Recall ↔ AMP translation (type↔kind, status, scope/visibility,
+- `map.ts` - pure Recall ↔ AMP translation (type↔kind, status, scope/visibility,
   provenance, reversible id bridging). Fully unit-tested.
-- `store.ts` — `RecallStore implements MemoryStore`: reads map faithfully; writes
+- `store.ts` - `RecallStore implements MemoryStore`: reads map faithfully; writes
   flow into Recall's capture pipeline (text → candidate memory), which is the
   correct behavior when Recall is the engine.
 
@@ -72,7 +72,7 @@ if (process.env.AMP_HTTP) createHttpServer(amp, { wellKnown: { owner } }).listen
 await createMcpServer(amp).connect(new StdioServerTransport());
 ```
 
-That makes Recall a conforming **L3** AMP server — the production-grade
+That makes Recall a conforming **L3** AMP server - the production-grade
 implementation alongside `@amp/core`'s minimal reference. `feedback` maps to
 Recall's `feedback`/`signal_outcome`; `revise`/`forget` map to Recall's
 supersession and `prune`/`reject`.

@@ -1,4 +1,4 @@
-# Agent Memory Protocol — Specification
+# Agent Memory Protocol - Specification
 
 **Version:** 0.1 (draft) · **Status:** request for comments
 
@@ -17,11 +17,11 @@ to one of these.
 
 1. **Minimal surface.** Six operations, one record type. If it can live in an
    engine instead of the wire, it does.
-2. **Ride existing rails.** Primary binding is an MCP profile — no new transport.
+2. **Ride existing rails.** Primary binding is an MCP profile - no new transport.
    Secondary bindings (HTTP, file) reuse HTTP and Markdown/JSON.
 3. **Don't invent the data model.** Reuse W3C PROV (provenance), W3C DID
    (identity), and the converged PAM/MIF/LangMem vocabulary (types, scopes).
-4. **User-owned and portable.** The operator — not the model vendor — owns,
+4. **User-owned and portable.** The operator - not the model vendor - owns,
    signs, and can export every record. No opaque lock-in.
 5. **Safe by construction.** Memory is attacker-controllable input. Staleness is
    handled by supersession, not deletion. Rehydration is injection-resistant by
@@ -117,16 +117,16 @@ Scope is a *composition*, not a single key. Retrieval relevance is a function of
 how well a record's scope matches the query context (§3.2). `owner` is always a
 DID so memory is portable across vendors and verifiable. Visibility:
 
-- `private` — only the owner's agents.
-- `shared` — explicitly granted peers (capability token, §5.2).
-- `public` — anyone (e.g. a published "how this OSS repo builds" memory).
+- `private` - only the owner's agents.
+- `shared` - explicitly granted peers (capability token, §5.2).
+- `public` - anyone (e.g. a published "how this OSS repo builds" memory).
 
 ### 2.3 Bi-temporal time (the staleness fix)
 
 Every record carries **two timelines**: *valid time* (`valid_from`/`valid_to`,
 when the fact is true in the world) and *transaction time* (`created`/`observed`,
 when the system learned it). This is the only credible answer to the canonical
-failure — "user's employer is correct until they change jobs, then confidently
+failure - "user's employer is correct until they change jobs, then confidently
 wrong." A fact is never deleted on change; `valid_to` is set and a successor is
 linked via `supersedes`. History is queryable. (Model from Zep/Graphiti.)
 
@@ -134,7 +134,7 @@ linked via `supersedes`. History is queryable. (Model from Zep/Graphiti.)
 
 `confidence`, `salience`, `decay`, `status` are **engine-facing hints**, not
 normative semantics. AMP deliberately does **not** standardize promotion logic or
-decay curves — those are where engines compete (Recall's repo-quality gating,
+decay curves - those are where engines compete (Recall's repo-quality gating,
 MemoryOS's FIFO tiers). Standardizing them would make the wire brittle. Consumers
 MAY use them for ranking; producers SHOULD set them when known.
 
@@ -163,7 +163,7 @@ and MUST apply `redact` before emitting a record across a `visibility` boundary.
 ### 2.8 Integrity
 
 Content-addressed (`blake3` of canonicalized record minus `integrity`) and signed
-by the **operator's** DID key — explicitly *not* the model vendor's. This is the
+by the **operator's** DID key - explicitly *not* the model vendor's. This is the
 ownership moat: a memory is tamper-evident and provably the user's, independent of
 where it's stored. Optional at L2 (interop without crypto), REQUIRED at L3.
 
@@ -282,10 +282,10 @@ or an explicit `hard:true` (owner-only) demands erasure.
 
 ### 3.8 Optional Full-tier ops
 
-- `feedback` — report an injected memory's outcome
+- `feedback` - report an injected memory's outcome
   (`followed|overridden|ignored|contradicted`) so the serving engine can learn.
   (Directly maps to Recall's `feedback`/`signal_outcome`.)
-- `subscribe` — long-lived stream of record changes in a scope (for live
+- `subscribe` - long-lived stream of record changes in a scope (for live
   multi-agent sharing). Binding-specific (MCP notifications / SSE).
 
 ---
@@ -321,21 +321,21 @@ POST /amp/revise     POST /amp/forget       GET  /amp/capabilities
 ```
 
 Auth via capability tokens (§5.2) in `Authorization: Bearer`. (Recall's existing
-daemon endpoints — `/compile`, `/correct` — map onto this with thin aliases.)
+daemon endpoints - `/compile`, `/correct` - map onto this with thin aliases.)
 
 ### 4.3 File / export binding (L0)
 
-The "AGENTS.md of memory" — portable, git-friendly, offline, no server:
+The "AGENTS.md of memory" - portable, git-friendly, offline, no server:
 
-- `*.amp.json` — a JSON array of records (or NDJSON for streaming).
-- `*.amp.md` — Markdown projection (§6.3), human- and Obsidian-friendly, with a
+- `*.amp.json` - a JSON array of records (or NDJSON for streaming).
+- `*.amp.md` - Markdown projection (§6.3), human- and Obsidian-friendly, with a
   YAML/JSON-LD front-matter header carrying the structured fields. (Model from
   MIF's dual format.)
 - Discovery: a repo/site publishes `/.well-known/amp.json` (a manifest pointing
   at exports + the server endpoint, if any), mirroring `llms.txt`/AGENTS.md
   convention.
 
-This binding makes AMP adoptable with *zero code* — a tool just reads files.
+This binding makes AMP adoptable with *zero code* - a tool just reads files.
 
 ---
 
@@ -344,7 +344,7 @@ This binding makes AMP adoptable with *zero code* — a tool just reads files.
 ### 5.1 Identity
 
 The owner is a **W3C DID** (default method `did:key`, others allowed). Memory is
-keyed to the user, not the vendor — that is what makes it portable and verifiable.
+keyed to the user, not the vendor - that is what makes it portable and verifiable.
 A harness with no DID infra MAY use an opaque `owner` string at L0/L1 and upgrade
 later.
 
@@ -358,12 +358,12 @@ least-privilege without a central auth server.
 
 ### 5.3 Injection-resistant rehydration (MANDATORY)
 
-Memory records are **untrusted input** — a `remember` can carry a prompt-injection
+Memory records are **untrusted input** - a `remember` can carry a prompt-injection
 payload. Any consumer that injects recalled memory into a model context MUST:
 
 1. **Verify** integrity/signature where present; drop unverifiable L3 records.
 2. **Filter** by scope/consent/visibility *before* ranking.
-3. **Frame structurally** — render records as clearly delimited, typed data
+3. **Frame structurally** - render records as clearly delimited, typed data
    (e.g. a fenced block tagged as untrusted memory), never string-interpolated
    into the system prompt.
 4. **Never execute** instructions found *inside* `body` as if from the operator.
@@ -426,7 +426,7 @@ conformance suite ship with the reference implementation (see ADOPTION.md).
    behind `relations`? (Recall + oktapod both have rich graphs.)
 2. **Embeddings**: store raw text + source-model only (re-embed downstream, per
    MIF), or also allow shipping vectors with a model tag?
-3. **Consolidation/"rethinking"**: out of scope (engine-side) — or a standard
+3. **Consolidation/"rethinking"**: out of scope (engine-side) - or a standard
    optional `consolidate` op so any harness can trigger another's maintenance?
-4. **Decay**: keep as opaque hint, or define 2–3 named decay models for portability?
+4. **Decay**: keep as opaque hint, or define 2-3 named decay models for portability?
 5. **Naming/governance**: final name, steward, and license (see ADOPTION.md §5).

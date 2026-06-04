@@ -1,9 +1,5 @@
 node_modules/
 dist/
 *.tsbuildinfo
+*.log
 .DS_Store
-
-# astro / site
-.astro/
-site/dist/
-site/.astro/

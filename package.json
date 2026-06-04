@@ -1,18 +1,63 @@
 {
   "name": "@amp/core",
   "version": "0.1.0",
-  "description": "Agent Memory Protocol — reference SDK and minimal server (record format, signing, store, bindings)",
+  "description": "Agent Memory Protocol (AMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
   "type": "module",
   "license": "Apache-2.0",
-  "exports": {
-    ".": "./src/index.ts"
+  "author": "Edi Hasaj <edihasaj@gmail.com>",
+  "homepage": "https://agentmemoryprotocol.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edihasaj/agent-memory-protocol.git"
   },
+  "bugs": "https://github.com/edihasaj/agent-memory-protocol/issues",
+  "keywords": [
+    "agent-memory",
+    "memory",
+    "protocol",
+    "mcp",
+    "llm",
+    "ai-agents",
+    "knowledge",
+    "standard"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./adapters/recall": {
+      "types": "./dist/adapters/recall/index.d.ts",
+      "import": "./dist/adapters/recall/index.js"
+    },
+    "./schema/amp-record.schema.json": "./src/schema/amp-record.schema.json"
+  },
+  "bin": {
+    "amp-serve": "./dist/bin/serve.js",
+    "amp-conformance": "./dist/bin/conformance.js"
+  },
+  "files": [
+    "dist",
+    "src/schema",
+    "SPEC.md",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "serve": "node --experimental-strip-types src/bin/serve.ts",
-    "conformance": "node --experimental-strip-types src/bin/conformance.ts"
+    "conformance": "node --experimental-strip-types src/bin/conformance.ts",
+    "prepublishOnly": "pnpm run typecheck && pnpm run test && pnpm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -22,6 +67,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   }

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Reference AMP server entrypoint.
  *   node --experimental-strip-types src/bin/serve.ts            # MCP over stdio

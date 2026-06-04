@@ -1,5 +1,5 @@
 /**
- * AmpServer — the six operations (SPEC §3) over a MemoryStore.
+ * AmpServer - the six operations (SPEC §3) over a MemoryStore.
  * Binding-neutral: MCP/HTTP/file bindings all call these methods.
  */
 

@@ -50,7 +50,7 @@ export function createHttpHandler(server: AmpServer, opts: HttpBindingOptions = 
     }
 
     try {
-      // Public routes — no capability required.
+      // Public routes - no capability required.
       if (method === "GET" && path === "/amp/capabilities") {
         return send(res, 200, server.capabilities());
       }

@@ -1,6 +1,6 @@
 /**
  * The money shot (ADOPTION.md §4): a memory written by one agent, recalled by
- * another, exported to a portable file, and re-imported into a third server —
+ * another, exported to a portable file, and re-imported into a third server -
  * across "vendors", verifiable end to end. Run:
  *   node --experimental-strip-types examples/round-trip.ts
  */
@@ -32,12 +32,12 @@ log("A wrote:", w.id, "(signed, content-addressed)");
 const records = await claude.recall({ query: "handoff gate", scope: { owner: owner.did } });
 const exported = file.exportRecords(records.results.map((r) => r.record));
 const json = file.toJson(exported);
-log("\n— portable .amp.json —\n" + json.trim());
+log("\n- portable .amp.json -\n" + json.trim());
 
 // ── Agent B (say, Codex) imports the file into its own store ─────────────
 const codex = new AmpServer({ name: "codex", version: "1", store: new InMemoryStore() });
 for (const rec of file.fromJson(json)) {
-  log(`\nB importing ${rec.id} — signature valid: ${verify(rec)}`);
+  log(`\nB importing ${rec.id} - signature valid: ${verify(rec)}`);
   await codex.remember(rec); // already signed; carried across vendors intact
 }
 

@@ -1,5 +1,5 @@
 /**
- * File binding (SPEC §4.3, §6.3) — the "AGENTS.md of memory".
+ * File binding (SPEC §4.3, §6.3) - the "AGENTS.md of memory".
  * Portable, git-friendly, offline, no server. Two formats:
  *   - *.amp.json : array of records (or NDJSON)
  *   - *.amp.md   : Markdown body + front-matter (round-trips losslessly for L2)

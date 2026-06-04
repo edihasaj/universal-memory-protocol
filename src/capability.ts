@@ -2,7 +2,7 @@
  * Capability-scoped access tokens (SPEC §5.2).
  *
  * Sharing (`visibility: shared`) is granted by a token scoping verbs × scope ×
- * time, signed by the OWNER's DID — least-privilege multi-agent sharing with no
+ * time, signed by the OWNER's DID - least-privilege multi-agent sharing with no
  * central auth server. Verbs: read | write | derive | export.
  *
  * Wire form: "ampcap.<base64url(claims)>.<ed25519:base64url(sig)>"

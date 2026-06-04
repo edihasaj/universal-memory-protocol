@@ -1,4 +1,4 @@
-/** Agent Memory Protocol — reference SDK (AMP 0.1). */
+/** Agent Memory Protocol - reference SDK (AMP 0.1). */
 
 export * from "./types.ts";
 export { canonicalize } from "./canonical.ts";

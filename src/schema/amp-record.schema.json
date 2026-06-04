@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmemoryprotocol.org/schema/0.1/record.json",
   "title": "AMP Memory Record",
-  "description": "Agent Memory Protocol 0.1 — the portable memory record (SPEC §2).",
+  "description": "Agent Memory Protocol 0.1 - the portable memory record (SPEC §2).",
   "type": "object",
   "required": ["amp", "id", "kind", "body", "scope", "time"],
   "additionalProperties": false,

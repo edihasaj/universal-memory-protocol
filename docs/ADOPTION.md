@@ -1,4 +1,4 @@
-# AMP — Adoption & Rollout
+# AMP - Adoption & Rollout
 
 A standard is a GitHub repo until something speaks it. This is the concrete path
 from draft to ecosystem, leaning on assets we already own.
@@ -43,39 +43,39 @@ proving the spec end-to-end and giving the ecosystem a real server to test again
 
 Thin shims so AMP isn't all-or-nothing:
 
-- **Claude Code / Codex** — already MCP hosts → point them at the Recall AMP
+- **Claude Code / Codex** - already MCP hosts → point them at the Recall AMP
   server; SessionStart/UserPromptSubmit hooks call `amp.recall`, corrections call
   `amp.remember`. (Recall already wires these.)
-- **openclaw** (`oss/openclaw`) — implement AMP behind its `ContextEngine`
+- **openclaw** (`oss/openclaw`) - implement AMP behind its `ContextEngine`
   interface: `assemble()` → `amp.recall`, `afterTurn()` → `amp.remember`. One
   adapter file.
-- **oktapod** — expose its memory facet over the AMP HTTP binding; its retention
+- **oktapod** - expose its memory facet over the AMP HTTP binding; its retention
   classes + provenance already match `consent`/`provenance`.
-- **ChatGPT / generic chat** — AMP HTTP binding as a custom action / connector; or
+- **ChatGPT / generic chat** - AMP HTTP binding as a custom action / connector; or
   import/export `*.amp.json` to bridge ChatGPT "saved memories" in and out.
-- **Wrap, don't replace** — Mem0/Letta/Zep adapters that translate their verbs to
+- **Wrap, don't replace** - Mem0/Letta/Zep adapters that translate their verbs to
   AMP ops, so AMP federates existing stores instead of competing with them.
 
 ## 4. Deliverables checklist
 
-- [ ] `amp-spec` (this repo) — SPEC + JSON Schema for the record + test vectors.
-- [ ] `amp-js` / `amp-py` SDKs — client + server helpers, MCP+HTTP+file bindings.
-- [ ] Conformance suite — runs L0–L3 assertions against any endpoint; emits a badge.
+- [ ] `amp-spec` (this repo) - SPEC + JSON Schema for the record + test vectors.
+- [ ] `amp-js` / `amp-py` SDKs - client + server helpers, MCP+HTTP+file bindings.
+- [ ] Conformance suite - runs L0-L3 assertions against any endpoint; emits a badge.
 - [ ] Recall `--amp` reference server (L2 → L3).
-- [ ] 2 adapters that interoperate (e.g. Recall ↔ openclaw) — proves portability.
+- [ ] 2 adapters that interoperate (e.g. Recall ↔ openclaw) - proves portability.
 - [ ] `.well-known/amp.json` discovery + a public example export.
 - [ ] A "round-trip" demo: a memory written in Claude Code, recalled in Codex,
-      exported to a file, re-imported into ChatGPT — the money shot.
+      exported to a file, re-imported into ChatGPT - the money shot.
 
 ## 5. Governance & naming
 
 - **Name:** working title **Agent Memory Protocol (AMP)**. Descriptive, rhymes with
   MCP, signals the positioning. Alternatives if AMP collides: *Agent Memory
-  Protocol (AMP — note Sourcegraph/Google AMP collision)*, codename *Engram*.
-  **Open decision — Edi's call** (§7).
+  Protocol (AMP - note Sourcegraph/Google AMP collision)*, codename *Engram*.
+  **Open decision - Edi's call** (§7).
 - **License:** spec under CC-BY-4.0; SDKs Apache-2.0/MIT. Permissive on purpose.
 - **Stewardship:** start single-author for velocity, but commit publicly to neutral
-  governance early (a working group / foundation track) — the difference between a
+  governance early (a working group / foundation track) - the difference between a
   trusted standard and a distrusted vendor spec. MCP's perceived neutrality was
   decisive; an "open" spec that one company controls gets routed around.
 - **RFC process:** publish v0.1 as an RFC; resolve SPEC §8 open questions with ≥2
@@ -93,11 +93,11 @@ Thin shims so AMP isn't all-or-nothing:
 
 ## 7. Decisions for Edi
 
-1. **Name** — go with AMP, or pick from alternatives / something new?
-2. **Reference impl** — fork Recall to a clean `amp` mode, or build a minimal
+1. **Name** - go with AMP, or pick from alternatives / something new?
+2. **Reference impl** - fork Recall to a clean `amp` mode, or build a minimal
    standalone reference server and keep Recall as one (richer) implementation?
-3. **Ambition tier** — (a) a tight interchange + MCP profile we ship fast, or
+3. **Ambition tier** - (a) a tight interchange + MCP profile we ship fast, or
    (b) the full negotiated protocol with signing/capability tokens aiming at
    Anthropic/OpenAI adoption? (Spec is written for (b); we can ship (a) first.)
-4. **Where it lives** — `edihasaj/agent-memory-protocol` public from the start, or
+4. **Where it lives** - `edihasaj/agent-memory-protocol` public from the start, or
    incubate private until v0.2?

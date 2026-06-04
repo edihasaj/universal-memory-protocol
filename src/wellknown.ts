@@ -1,6 +1,6 @@
 /**
  * Discovery manifest (SPEC §4.3): a repo/site publishes `/.well-known/amp.json`
- * pointing at its endpoint(s), conformance level, and any portable exports —
+ * pointing at its endpoint(s), conformance level, and any portable exports -
  * mirroring the AGENTS.md / llms.txt convention.
  */
 

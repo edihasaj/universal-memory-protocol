@@ -41,6 +41,6 @@ function serialize(value: unknown): string {
 }
 
 function compareCodeUnits(a: string, b: string): number {
-  // Native JS string comparison is by UTF-16 code unit — exactly JCS's rule.
+  // Native JS string comparison is by UTF-16 code unit - exactly JCS's rule.
   return a < b ? -1 : a > b ? 1 : 0;
 }

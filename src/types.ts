@@ -1,5 +1,5 @@
 /**
- * Agent Memory Protocol — record & operation types (AMP 0.1).
+ * Agent Memory Protocol - record & operation types (AMP 0.1).
  * Mirrors SPEC.md §2 (record) and §3 (operations). Transport-neutral.
  */
 

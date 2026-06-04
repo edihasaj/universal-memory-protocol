@@ -1,6 +1,6 @@
 /**
  * Lightweight structural validation of a Memory Record against the AMP 0.1
- * constraints (SPEC §2). Dependency-free — checks the same invariants the JSON
+ * constraints (SPEC §2). Dependency-free - checks the same invariants the JSON
  * Schema encodes (src/schema/amp-record.schema.json) without a schema engine.
  *
  * Returns the list of problems; empty = valid.

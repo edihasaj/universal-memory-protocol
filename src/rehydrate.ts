@@ -1,10 +1,10 @@
 /**
- * Injection-resistant rehydration (SPEC §5.3) — MANDATORY for any consumer that
+ * Injection-resistant rehydration (SPEC §5.3) - MANDATORY for any consumer that
  * injects recalled memory into a model context.
  *
  * Memory is attacker-controllable input. The pipeline:
  *   Verify → Filter → Rank → Compress → Format → Frame
- * Records are rendered as clearly-delimited, typed, untrusted data — never
+ * Records are rendered as clearly-delimited, typed, untrusted data - never
  * string-interpolated into the system prompt, never executed as instructions.
  */
 

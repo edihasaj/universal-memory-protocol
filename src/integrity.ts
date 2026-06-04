@@ -2,7 +2,7 @@
  * Integrity: BLAKE3 content hashing + Ed25519 signing over canonical records,
  * with did:key identity for the operator (SPEC §2.8, §5.1, §6.1).
  *
- * The operator — not the model vendor — holds the key. This is the ownership
+ * The operator - not the model vendor - holds the key. This is the ownership
  * moat: a record is tamper-evident and provably the user's, wherever it lives.
  */
 

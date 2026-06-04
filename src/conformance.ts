@@ -1,6 +1,6 @@
 /**
  * Conformance runner (SPEC §7). Exercises an AMP HTTP endpoint and reports the
- * highest level it satisfies (L0–L3). Used by the CLI (`src/bin/conformance.ts`)
+ * highest level it satisfies (L0-L3). Used by the CLI (`src/bin/conformance.ts`)
  * and by tests against the in-process HTTP binding.
  */
 
