@@ -48,9 +48,19 @@ First cut of the Agent Memory Protocol: spec + working L3 reference implementati
 - `runConformance()` + `pnpm conformance <url>` CLI: probes an endpoint and
   reports the highest level satisfied with a badge (`AMP 0.1 / L3`).
 
+### Recall adapter (`adapters/recall/`)
+- `map.ts` — pure Recall ↔ AMP translation (type↔kind, status, scope/visibility,
+  provenance, reversible id bridging).
+- `store.ts` — `RecallStore implements MemoryStore` over an injected
+  `RecallBackend` (decoupled from Recall's native sqlite-vec deps): reads map
+  faithfully, writes flow into Recall's capture pipeline.
+- `README.md` — the ~30-line wiring for a conforming **L3** `recall amp` command
+  in the Recall repo (the production server alongside the minimal reference).
+
 ### Tests
-- 28 conformance + binding + L3 tests passing; `tsc --noEmit` clean. The
-  reference HTTP server self-certifies **L3** via the conformance runner.
+- 32 conformance + binding + L3 + adapter tests passing; `tsc --noEmit` clean.
+  Reference HTTP server self-certifies **L3** via the conformance runner.
 
 ### Next
-- Recall `--amp` mode (the richer, production conforming server) per ADOPTION §2.
+- Land the `recall amp` command inside the Recall repo (needs its native deps +
+  test gate) using `adapters/recall/`.
