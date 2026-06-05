@@ -130,15 +130,15 @@ export class UmpServer {
     const dup = await this.store.findDuplicate(record);
     if (dup) {
       const merged = this.mergeEvidence(dup, record);
-      await this.store.put(merged);
-      this.emit({ type: "merged", id: merged.id, record: merged });
-      return { id: merged.id, result: "merged" };
+      const mergedId = (await this.store.put(merged)) || merged.id;
+      this.emit({ type: "merged", id: mergedId, record: merged });
+      return { id: mergedId, result: "merged" };
     }
 
     record = this.finalize(record);
-    await this.store.put(record);
-    this.emit({ type: "created", id: record.id, record });
-    return { id: record.id, result: "created" };
+    const id = (await this.store.put(record)) || record.id;
+    this.emit({ type: "created", id, record });
+    return { id, result: "created" };
   }
 
   async revise(req: ReviseRequest): Promise<ReviseResponse> {
@@ -163,7 +163,7 @@ export class UmpServer {
       integrity: undefined,
     };
     const successor = this.finalize(draft);
-    await this.store.put(successor);
+    const successorId = (await this.store.put(successor)) || successor.id;
 
     // Close the prior: set valid_to + superseded_by (non-destructive).
     const closed: MemoryRecord = {
@@ -174,8 +174,8 @@ export class UmpServer {
     };
     await this.store.put(this.finalize(closed));
 
-    this.emit({ type: "revised", id: successor.id, record: successor });
-    return { id: successor.id, supersedes: successor.supersedes ?? [] };
+    this.emit({ type: "revised", id: successorId, record: successor });
+    return { id: successorId, supersedes: successor.supersedes ?? [] };
   }
 
   async forget(req: ForgetRequest): Promise<{ result: "tombstoned" | "erased" }> {

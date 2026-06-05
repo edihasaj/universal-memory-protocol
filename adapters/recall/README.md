@@ -13,8 +13,10 @@ tests anywhere. The real `recall ump` command supplies the backend.
 - `map.ts` - pure Recall ↔ UMP translation (type↔kind, status, scope/visibility,
   provenance, reversible id bridging). Fully unit-tested.
 - `store.ts` - `RecallStore implements MemoryStore`: reads map faithfully; writes
-  flow into Recall's capture pipeline (text → candidate memory), which is the
-  correct behavior when Recall is the engine.
+  are faithful by default (`put` stores the record as an active Recall memory and
+  returns Recall's id, so `remember` round-trips via `get` and stays fast - ~30ms
+  under concurrency). Pass `{ smart: true }` to route writes through Recall's
+  capture/judgement pipeline (extraction + candidate promotion) instead.
 
 ## Mapping summary
 

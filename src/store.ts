@@ -15,7 +15,12 @@ import type {
 import { recordVisibleForScope } from "./policy.ts";
 
 export interface MemoryStore {
-  put(record: MemoryRecord): Promise<void>;
+  /**
+   * Persist a record. May return the store's canonical id for the record (used
+   * by engines like Recall that assign their own ids); when it returns void the
+   * server keeps the record's existing id.
+   */
+  put(record: MemoryRecord): Promise<void | string>;
   get(id: string): Promise<MemoryRecord | undefined>;
   /** All records (engines override search; default loops this). */
   all(): Promise<MemoryRecord[]>;

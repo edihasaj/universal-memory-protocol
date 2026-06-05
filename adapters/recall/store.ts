@@ -1,11 +1,12 @@
 /**
  * RecallStore - an UMP `MemoryStore` backed by Recall's engine.
  *
- * Recall keeps its native lifecycle (repo-quality promotion, dedup,
- * consolidation). This store maps reads faithfully; writes flow into Recall's
- * capture pipeline (text → candidate memory) rather than storing the UMP record
- * verbatim - the correct behavior when Recall is the engine. Inject a
- * `RecallBackend` so this file never imports Recall's native (sqlite-vec) deps.
+ * Reads map faithfully (Recall's hybrid retrieval). Writes are FAITHFUL by
+ * default: `put` stores the UMP record directly as an active Recall memory and
+ * returns Recall's id, so `remember` round-trips via `get` and stays fast. Pass
+ * `{ smart: true }` to instead route writes through Recall's capture pipeline
+ * (extraction + judgement + candidate promotion). Inject a `RecallBackend` so
+ * this file never imports Recall's native (sqlite-vec) deps.
  */
 
 import type { MemoryStore } from "../../src/store.ts";
@@ -16,9 +17,13 @@ import type {
 } from "../../src/types.ts";
 import {
   fromUmpId,
+  toUmpId,
+  kindToRecallType,
   recallMemoryToRecord,
   recordToRecallCapture,
   type RecallMemory,
+  type RecallType,
+  type RecallScope,
 } from "./map.ts";
 
 export interface RecallBackend {
@@ -31,8 +36,16 @@ export interface RecallBackend {
     path?: string;
     limit?: number;
   }): Promise<Array<{ memory: RecallMemory; score: number }>>;
-  /** Recall's capture path (processCorrection). */
-  capture(input: {
+  /** Faithful direct write: store the record as a Recall memory; returns its id. */
+  storeDirect(input: {
+    text: string;
+    type: RecallType;
+    scope: RecallScope;
+    repo?: string;
+    confidence: number;
+  }): Promise<string>;
+  /** Optional: Recall's capture/judgement path (processCorrection). */
+  capture?(input: {
     text: string;
     type: string;
     repo?: string;
@@ -43,7 +56,7 @@ export interface RecallBackend {
 export class RecallStore implements MemoryStore {
   constructor(
     private backend: RecallBackend,
-    private opts: { owner: string },
+    private opts: { owner: string; smart?: boolean },
   ) {}
 
   async get(id: string): Promise<MemoryRecord | undefined> {
@@ -78,12 +91,27 @@ export class RecallStore implements MemoryStore {
     });
   }
 
-  /** Writes go through Recall's capture pipeline; Recall assigns the id. */
-  async put(record: MemoryRecord): Promise<void> {
-    await this.backend.capture(recordToRecallCapture(record));
+  /**
+   * Faithful write by default: store the record and return Recall's id (so the
+   * server reports an id that `get` can resolve). `smart` routes through the
+   * capture/judgement pipeline instead (Recall decides what is memory-worthy).
+   */
+  async put(record: MemoryRecord): Promise<void | string> {
+    if (this.opts.smart && this.backend.capture) {
+      await this.backend.capture(recordToRecallCapture(record));
+      return; // capture owns id assignment / judgement; keep the record's id
+    }
+    const id = await this.backend.storeDirect({
+      text: record.body.text,
+      type: kindToRecallType(record.kind),
+      scope: record.scope.project ? "repo" : "global",
+      repo: record.scope.project,
+      confidence: record.lifecycle?.confidence ?? 0.8,
+    });
+    return toUmpId(id);
   }
 
-  /** Recall performs its own semantic dedup inside capture. */
+  /** Recall performs its own dedup; let the engine handle it. */
   async findDuplicate(): Promise<MemoryRecord | undefined> {
     return undefined;
   }

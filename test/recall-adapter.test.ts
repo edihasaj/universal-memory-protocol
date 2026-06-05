@@ -37,15 +37,22 @@ const rows: RecallMemory[] = [
   },
 ];
 
+let storeSeq = 0;
 function backend(): RecallBackend {
   const captured: { text: string }[] = [];
+  const localRows: RecallMemory[] = rows.map((r) => ({ ...r })); // isolate per test
   return {
-    queryMemories: () => rows,
-    getMemory: (id) => rows.find((r) => r.id === id),
+    queryMemories: () => localRows,
+    getMemory: (id) => localRows.find((r) => r.id === id),
     compileHybrid: async ({ query }) =>
-      rows
+      localRows
         .filter((r) => query.split(" ").some((w) => r.text.toLowerCase().includes(w.toLowerCase())))
         .map((memory) => ({ memory, score: 0.9 })),
+    storeDirect: async ({ text, type, scope, repo, confidence }) => {
+      const id = `created-${++storeSeq}-aaaa-bbbb-cccc-dddddddddddd`;
+      localRows.push({ id, text, type, scope, status: "active", confidence, repo: repo ?? null });
+      return id;
+    },
     capture: async ({ text }) => {
       captured.push({ text });
       return { ids: [`new-${captured.length}`] };
@@ -99,7 +106,31 @@ describe("RecallStore under UmpServer", () => {
       scope: { owner: OWNER, project: "edihasaj/recall", visibility: "private" },
       provenance: { actor: OWNER, actor_kind: "user", method: "user_correction" },
     });
-    // Recall owns lifecycle; capture returns created.
     expect(r.result).toBe("created");
+  });
+
+  it("faithful write: remember -> get round-trips by the returned id", async () => {
+    const server = new UmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(backend(), { owner: OWNER }) });
+    const r = await server.remember({
+      kind: "procedural", body: { text: "never deploy on fridays" },
+      scope: { owner: OWNER, project: "edihasaj/recall", visibility: "private" },
+      provenance: { actor: OWNER, actor_kind: "user", method: "user_correction" },
+    });
+    expect(r.result).toBe("created");
+    expect(r.id).toMatch(/^urn:ump:[a-z2-7]+$/);
+    // the id the server reports must resolve back to the stored record
+    const got = await server.get(r.id);
+    expect(got.body.text).toBe("never deploy on fridays");
+    expect(got.kind).toBe("procedural");
+  });
+
+  it("smart mode routes writes through the capture pipeline", async () => {
+    const server = new UmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(backend(), { owner: OWNER, smart: true }) });
+    const r = await server.remember({
+      kind: "procedural", body: { text: "smart capture path" },
+      scope: { owner: OWNER, project: "edihasaj/recall", visibility: "private" },
+      provenance: { actor: OWNER, actor_kind: "user", method: "user_correction" },
+    });
+    expect(r.result).toBe("created"); // capture owns judgement; server keeps record id
   });
 });
