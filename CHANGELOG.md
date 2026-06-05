@@ -4,6 +4,15 @@
 
 First cut of the Universal Memory Protocol: spec + working L3 reference implementation.
 
+### Launch kit
+- `ump-memory` bin - a one-command **persistent** MCP memory server for any host
+  (`npx -y @ump/core ump-memory`): `JsonFileStore` at `~/.ump/memory.ump.json`
+  plus a **stable operator key** (`~/.ump/key.json`), so records stay owned and
+  signed across restarts. MCP stdio by default; `UMP_HTTP` for the HTTP binding.
+- `GOVERNANCE.md` - neutral-stewardship intent + the path to a working group.
+- `docs/launch/` - Show HN draft, X thread, 90s demo script, distribution checklist.
+- README + docs site lead with the "Use it now" MCP one-liner.
+
 ### Spec
 - `SPEC.md` - record format, 6 operations, 3 bindings (MCP/HTTP/file), L0-L3
   conformance, trust model (DID + signatures + capability tokens),

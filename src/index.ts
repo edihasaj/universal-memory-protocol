@@ -13,7 +13,19 @@ export {
 } from "./integrity.ts";
 export { randomId, contentId, isUmpId, isAmpId } from "./id.ts";
 export { InMemoryStore, type MemoryStore } from "./store.ts";
+export { MirrorStore } from "./stores/mirror.ts";
 export { JsonFileStore } from "./stores/file.ts";
+export { MarkdownDirectoryStore } from "./stores/markdown.ts";
+export { PostgresStore, type PostgresClient } from "./stores/postgres.ts";
+export { SqliteStore, type SqliteDatabase } from "./stores/sqlite.ts";
+export { RedisStore, type RedisClient } from "./stores/redis.ts";
+export {
+  VectorStore,
+  QdrantStore,
+  PineconeStore,
+  WeaviateStore,
+  type VectorMemoryClient,
+} from "./stores/vector.ts";
 export {
   UmpServer,
   type UmpServerOptions,

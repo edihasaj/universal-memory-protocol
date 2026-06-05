@@ -16,6 +16,24 @@ agents read, write, and exchange memory** - a small set of negotiated operations
 over a portable, signed, bi-temporal record format. Any harness can speak it; any
 store can serve it; the user owns and can export the result.
 
+## Use it now (any MCP host)
+
+Add persistent, portable memory to Claude Code, Cursor, Codex, or any MCP host in
+one line. Add to your MCP client config:
+
+```jsonc
+{
+  "mcpServers": {
+    "ump": { "command": "npx", "args": ["-y", "@ump/core", "ump-memory"] }
+  }
+}
+```
+
+The agent gets `ump.remember` / `ump.recall` (plus `get/revise/forget/feedback`).
+Memory persists to `~/.ump/memory.ump.json` as a portable, signed file - switch
+tools, point the next one at the same store (or its export), and your agent keeps
+everything it learned. That portability is the whole point.
+
 ## Why now, and why this shape
 
 Three things are true in 2026:

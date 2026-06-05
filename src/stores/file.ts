@@ -1,8 +1,9 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fromJson, toJson } from "../bindings/file.ts";
-import { InMemoryStore, type MemoryStore } from "../store.ts";
+import type { MemoryStore } from "../store.ts";
 import type { MemoryRecord, RecallRequest, RecallResult } from "../types.ts";
+import { MirrorStore } from "./mirror.ts";
 
 /**
  * Dependency-free persistent store.
@@ -13,7 +14,7 @@ import type { MemoryRecord, RecallRequest, RecallResult } from "../types.ts";
  * vector/FTS/graph-backed MemoryStore.
  */
 export class JsonFileStore implements MemoryStore {
-  private inner = new InMemoryStore();
+  private inner = new JsonMirror();
   private writeQueue: Promise<void> = Promise.resolve();
   private filePath: string;
 
@@ -52,9 +53,7 @@ export class JsonFileStore implements MemoryStore {
   private async load(): Promise<void> {
     try {
       const text = await readFile(this.filePath, "utf8");
-      for (const record of fromJson(text)) {
-        await this.inner.put(record);
-      }
+      await this.inner.hydrateRecords(fromJson(text));
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
       await mkdir(dirname(this.filePath), { recursive: true });
@@ -67,5 +66,15 @@ export class JsonFileStore implements MemoryStore {
     const tmp = `${this.filePath}.${process.pid}.${Date.now()}.tmp`;
     await writeFile(tmp, toJson(records), "utf8");
     await rename(tmp, this.filePath);
+  }
+}
+
+class JsonMirror extends MirrorStore {
+  hydrateRecords(records: Iterable<MemoryRecord>): Promise<void> {
+    return this.hydrate(records);
+  }
+
+  protected async persist(): Promise<void> {
+    // JsonFileStore batches writes itself.
   }
 }
