@@ -88,7 +88,7 @@ profile (L1) in an afternoon.
 - **[SPEC.md](./SPEC.md)** - the draft standard: record schema, operations, bindings, conformance, trust.
 - **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
 - **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: Recall as reference impl, adapters, governance, the path to Anthropic/OpenAI.
-- **`src/`** - `@ump/core`, the reference SDK + L3 server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
+- **`src/`** - `@ump/core`, the reference SDK + minimal server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
 - **`adapters/recall/`** - serve UMP over [Recall](https://github.com/edihasaj/recall)'s engine.
 - **`examples/round-trip.ts`** - write, recall, export, import across "vendors", signature intact.
 - **docs site** - lives in a separate repo (`universal-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
@@ -102,7 +102,7 @@ pnpm test                                               # conformance + binding 
 pnpm build                                              # tsup -> dist (esm + d.ts + bins)
 node --experimental-strip-types examples/round-trip.ts  # the cross-vendor demo
 UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
-pnpm conformance http://localhost:4000                  # self-certify L0-L3
+pnpm conformance http://localhost:4000                  # report the endpoint's proven conformance level
 ```
 
 ## Name & domains

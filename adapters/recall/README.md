@@ -62,9 +62,9 @@ const backend: RecallBackend = {
 };
 
 const ump = new UmpServer({
-  name: "recall", version: RECALL_VERSION, conformance: "L3",
+  name: "recall", version: RECALL_VERSION, conformance: "L2",
   store: new RecallStore(backend, { owner: { did: owner } as any }),
-  key: operatorKeyPair,                            // sign on write (L3)
+  key: operatorKeyPair,                            // signed writes; raise to L3 when capability enforcement is wired
 });
 
 // expose over MCP (primary) and/or HTTP
@@ -72,9 +72,9 @@ if (process.env.UMP_HTTP) createHttpServer(ump, { wellKnown: { owner } }).listen
 await createMcpServer(ump).connect(new StdioServerTransport());
 ```
 
-That makes Recall a conforming **L3** UMP server - the production-grade
-implementation alongside `@ump/core`'s minimal reference. `feedback` maps to
-Recall's `feedback`/`signal_outcome`; `revise`/`forget` map to Recall's
+That makes Recall a conforming **L2** UMP server, with a clear path to **L3**
+once capability-token enforcement is wired at the binding boundary. `feedback`
+maps to Recall's `feedback`/`signal_outcome`; `revise`/`forget` map to Recall's
 supersession and `prune`/`reject`.
 
 > Status: the mapping + store are implemented and tested here against a fake
