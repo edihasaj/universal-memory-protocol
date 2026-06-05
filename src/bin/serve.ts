@@ -19,7 +19,7 @@ const key = generateKeyPair();
 const ump = new UmpServer({
   name: "ump-ref",
   version: "0.1.0",
-  conformance: "L3",
+  conformance: "L2",
   store: new InMemoryStore(),
   key,
 });

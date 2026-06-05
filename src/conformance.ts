@@ -34,12 +34,17 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   const add = (id: string, level: ConformanceLevel, ok: boolean, detail = "") =>
     checks.push({ id, level, ok, detail });
 
-  const call = async (method: string, path: string, body?: unknown) => {
+  const call = async (
+    method: string,
+    path: string,
+    body?: unknown,
+    token: string | null | undefined = opts.token,
+  ) => {
     const res = await fetch(base + path, {
       method,
       headers: {
         "content-type": "application/json",
-        ...(opts.token ? { authorization: `Bearer ${opts.token}` } : {}),
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
@@ -129,6 +134,49 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   add("L3.signed", "L3",
     !!createdRecord?.integrity && verify(createdRecord),
     createdRecord?.integrity ? "signature verifies" : "no integrity block");
+  if (createdId) {
+    try {
+      const fb = await call("POST", "/ump/feedback", {
+        id: createdId,
+        outcome: "followed",
+        session: "ump-conformance",
+      });
+      add("L3.feedback", "L3", fb.status === 200 && fb.json?.ok === true,
+        `status ${fb.status}`);
+    } catch (e) {
+      add("L3.feedback", "L3", false, `error: ${String(e)}`);
+    }
+  }
+  try {
+    const noToken = await call("POST", "/ump/recall", {
+      query: "gate",
+      scope: { owner, project: "ump/conformance" },
+    }, null);
+    const withToken = opts.token
+      ? await call("POST", "/ump/recall", {
+          query: "gate",
+          scope: { owner, project: "ump/conformance" },
+        })
+      : undefined;
+    add("L3.capability_tokens", "L3",
+      noToken.status === 401 && (!withToken || withToken.status === 200),
+      `no-token ${noToken.status}, token ${withToken?.status ?? "missing"}`);
+  } catch (e) {
+    add("L3.capability_tokens", "L3", false, `error: ${String(e)}`);
+  }
+  try {
+    const ac = new AbortController();
+    const res = await fetch(base + "/ump/subscribe", {
+      headers: opts.token ? { authorization: `Bearer ${opts.token}` } : {},
+      signal: ac.signal,
+    });
+    ac.abort();
+    add("L3.subscribe", "L3",
+      res.status === 200 && (res.headers.get("content-type") ?? "").includes("text/event-stream"),
+      `status ${res.status}, content-type ${res.headers.get("content-type")}`);
+  } catch (e) {
+    add("L3.subscribe", "L3", false, `error: ${String(e)}`);
+  }
 
   // ── level = highest contiguous level fully satisfied ──
   const order: ConformanceLevel[] = ["L1", "L2", "L3"];

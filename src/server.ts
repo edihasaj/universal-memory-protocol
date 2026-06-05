@@ -57,7 +57,7 @@ export class UmpServer {
     this.opts = {
       name: o.name,
       version: o.version,
-      conformance: o.conformance ?? "L3",
+      conformance: o.conformance ?? "L1",
       requireSignature: o.requireSignature ?? false,
       now: o.now ?? (() => new Date()),
       key: o.key,

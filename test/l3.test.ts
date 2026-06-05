@@ -9,6 +9,7 @@ import {
   allows,
   validateDraft,
   createHttpServer,
+  type CapabilityVerb,
 } from "../src/index.ts";
 import { runConformance } from "../src/conformance.ts";
 
@@ -102,14 +103,37 @@ describe("HTTP capability enforcement", () => {
 describe("conformance runner (SPEC §7)", () => {
   it("rates the reference HTTP server as L3", async () => {
     const s = server({ sign: true });
-    const http = createHttpServer(s, { wellKnown: { owner: OWNER.did } });
+    const http = createHttpServer(s, {
+      requireCapability: { now: fixed },
+      wellKnown: { owner: OWNER.did },
+    });
     const base = await listen(http);
     try {
-      const report = await runConformance(base, { owner: OWNER.did });
+      const token = mintCapability(OWNER, {
+        verbs: ["read", "write", "derive"] satisfies CapabilityVerb[],
+        scope: {},
+        exp: "2999-01-01T00:00:00Z",
+        jti: "conformance",
+      });
+      const report = await runConformance(base, { owner: OWNER.did, token });
       const failed = report.checks.filter((c) => !c.ok);
       expect(failed, JSON.stringify(failed, null, 2)).toEqual([]);
       expect(report.level).toBe("L3");
       expect(report.badge).toBe("UMP 0.1 / L3");
+    } finally {
+      http.close();
+    }
+  });
+
+  it("does not rate an unsigned unauthenticated endpoint as L3", async () => {
+    const s = server();
+    const http = createHttpServer(s);
+    const base = await listen(http);
+    try {
+      const report = await runConformance(base, { owner: OWNER.did });
+      expect(report.level).toBe("L2");
+      expect(report.checks.find((c) => c.id === "L3.signed")?.ok).toBe(false);
+      expect(report.checks.find((c) => c.id === "L3.capability_tokens")?.ok).toBe(false);
     } finally {
       http.close();
     }

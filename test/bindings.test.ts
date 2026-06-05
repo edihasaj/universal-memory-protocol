@@ -33,6 +33,7 @@ describe("HTTP binding (SPEC §4.2)", () => {
     expect(res.statusCode).toBe(200);
     const json = JSON.parse(body());
     expect(json.ump).toBe("0.1");
+    expect(json.conformance).toBe("L1");
     expect(json.bindings).toContain("mcp");
   });
 
