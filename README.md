@@ -2,7 +2,7 @@
 
 > A portable memory protocol for AI agents.
 
-**Status:** Draft v0.1 · **Package:** `@ump/core` · **Bindings:** MCP, HTTP, file export
+**Status:** Draft v0.1 · **Package:** `@universalmemoryprotocol/core` · **Bindings:** MCP, HTTP, file export
 
 UMP standardizes how agents read, write, revise, forget, and exchange memory
 across tools, runtimes, and storage engines. It is not a database and it is not a
@@ -17,7 +17,7 @@ Add persistent UMP memory to any MCP host:
 ```jsonc
 {
   "mcpServers": {
-    "ump": { "command": "npx", "args": ["-y", "@ump/core", "ump-memory"] }
+    "ump": { "command": "npx", "args": ["-y", "@universalmemoryprotocol/core", "ump-memory"] }
   }
 }
 ```
@@ -117,7 +117,7 @@ for common adoption paths:
 | `QdrantStore` / `PineconeStore` / `WeaviateStore` | Hosted vector clients. |
 | `RecallStore` | Opt-in adapter for a Recall-backed memory engine. |
 
-Vendor database SDKs stay outside `@ump/core`, so installing the protocol package
+Vendor database SDKs stay outside `@universalmemoryprotocol/core`, so installing the protocol package
 does not force native builds or cloud clients into every project.
 
 ### Choosing a backend
@@ -140,7 +140,7 @@ format, bindings, and protocol are identical across all of them.
 
 ## Existing Memory Imports
 
-UMP stays separate from vendor-specific memory files, but `@ump/core` includes
+UMP stays separate from vendor-specific memory files, but `@universalmemoryprotocol/core` includes
 import helpers so users can migrate existing memory into portable UMP records.
 
 ```bash
@@ -170,7 +170,7 @@ Recall is one implementation target: a rich memory engine that can be exposed
 through UMP via `RecallStore`. It is not the protocol, not a required dependency,
 and not the only valid backend.
 
-The reference protocol surface lives in `@ump/core`: schema, types, bindings,
+The reference protocol surface lives in `@universalmemoryprotocol/core`: schema, types, bindings,
 server helpers, stores, importers, and conformance tests. Recall exists to prove
 that UMP can wrap a production-grade memory engine without making the standard
 vendor-specific.
@@ -189,7 +189,7 @@ pnpm build
 Install once, then drive everything from one command:
 
 ```bash
-npm install -g @ump/core      # provides: ump, ump-memory, ump-serve, ump-conformance, ump-import
+npm install -g @universalmemoryprotocol/core      # provides: ump, ump-memory, ump-serve, ump-conformance, ump-import
 ```
 
 ```bash
@@ -203,8 +203,8 @@ ump demo                      # the cross-vendor round-trip
 ump --help
 ```
 
-No install? Use `npx -y @ump/core ump <command>`. MCP hosts point at the bin
-directly: `{ "command": "npx", "args": ["-y", "@ump/core", "ump-memory"] }`.
+No install? Use `npx -y @universalmemoryprotocol/core ump <command>`. MCP hosts point at the bin
+directly: `{ "command": "npx", "args": ["-y", "@universalmemoryprotocol/core", "ump-memory"] }`.
 
 From a clone (no build needed):
 
@@ -227,7 +227,7 @@ node --experimental-strip-types src/bin/ump.ts demo
 
 Protocol GitHub repository: Apache-2.0. See [LICENSE](./LICENSE).
 
-`@ump/core`, adapters, examples, and package code are MIT. See
+`@universalmemoryprotocol/core`, adapters, examples, and package code are MIT. See
 [LICENSE-PACKAGE](./LICENSE-PACKAGE).
 
 Specification and documentation prose are CC-BY-4.0. See

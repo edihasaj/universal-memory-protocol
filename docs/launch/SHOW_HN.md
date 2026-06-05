@@ -19,7 +19,7 @@ small, open standard for how agents read, write, and exchange memory.
 It's deliberately not a new wire protocol - it rides MCP. You add one MCP server
 and any host gets `ump.remember` / `ump.recall`:
 
-    { "mcpServers": { "ump": { "command": "npx", "args": ["-y", "@ump/core", "ump-memory"] } } }
+    { "mcpServers": { "ump": { "command": "npx", "args": ["-y", "@universalmemoryprotocol/core", "ump-memory"] } } }
 
 Memory persists as a portable, signed file (`~/.ump/memory.ump.json`). Point the
 next tool at the same store and it keeps everything. That's the whole pitch:

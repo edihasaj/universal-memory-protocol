@@ -8,7 +8,7 @@ Record it as a screen capture; export a GIF for the README and the launch posts.
 - Two MCP hosts configured with the same UMP server, e.g. Claude Code and Cursor:
 
   { "mcpServers": { "ump":
-    { "command": "npx", "args": ["-y","@ump/core","ump-memory"] } } }
+    { "command": "npx", "args": ["-y","@universalmemoryprotocol/core","ump-memory"] } } }
 
 ## Beat 1 - teach it (0:00-0:25)  [in Claude Code]
 > "Remember: in this repo we use pnpm, never npm, and always run `pnpm gate`
@@ -31,7 +31,7 @@ crossed vendors. That's the moment.
 Show ownership + portability:
 
     # verify it is signed by your key, not a vendor's
-    npx -y @ump/core ump-conformance http://localhost:4000   # if HTTP enabled
+    npx -y @universalmemoryprotocol/core ump-conformance http://localhost:4000   # if HTTP enabled
     # or just show the portable file is a plain, inspectable, signed record
 
 > "It's a file you own. Copy the directory and you've migrated your agent's mind -

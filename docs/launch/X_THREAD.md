@@ -13,7 +13,7 @@ So I built UMP: the Universal Memory Protocol. 🧵
 The pitch in one config block. Add one MCP server, any host gets portable memory:
 
 { "mcpServers": { "ump":
-  { "command": "npx", "args": ["-y","@ump/core","ump-memory"] } } }
+  { "command": "npx", "args": ["-y","@universalmemoryprotocol/core","ump-memory"] } } }
 
 Now your agent has ump.remember / ump.recall. Memory lives in a portable signed
 file. Switch tools, keep everything.

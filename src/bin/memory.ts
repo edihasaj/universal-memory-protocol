@@ -3,8 +3,8 @@
  * ump-memory - a persistent Universal Memory Protocol server you can plug into
  * any MCP host (Claude Code, Cursor, Codex, ...) in one line.
  *
- *   npx -y @ump/core ump-memory                  # MCP over stdio
- *   UMP_HTTP=4000 npx -y @ump/core ump-memory    # + HTTP binding
+ *   npx -y @universalmemoryprotocol/core ump-memory                  # MCP over stdio
+ *   UMP_HTTP=4000 npx -y @universalmemoryprotocol/core ump-memory    # + HTTP binding
  *
  * Unlike the ephemeral reference (`ump-serve`), this persists memories to disk
  * (atomic UMP JSON export) and keeps a STABLE operator identity across restarts,

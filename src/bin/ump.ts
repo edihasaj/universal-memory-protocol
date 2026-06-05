@@ -172,7 +172,7 @@ function printHelp(): void {
     `  ${ui.gray("ump memory --store markdown")}\n` +
     `  ${ui.gray("ump import --owner did:key:z... AGENTS.md CLAUDE.md")}\n` +
     `  ${ui.gray("ump conformance http://localhost:4000")}\n\n` +
-    `${ui.dim("MCP host config:")} ${ui.gray('{ "command": "npx", "args": ["-y","@ump/core","ump-memory"] }')}\n\n`,
+    `${ui.dim("MCP host config:")} ${ui.gray('{ "command": "npx", "args": ["-y","@universalmemoryprotocol/core","ump-memory"] }')}\n\n`,
   );
 }
 

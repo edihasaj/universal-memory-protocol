@@ -35,12 +35,12 @@ tests anywhere. The real `recall ump` command supplies the backend.
 
 ## Wiring `recall ump` (in the Recall repo)
 
-Add `@ump/core` as a dependency, then mount the adapter over Recall's existing
+Add `@universalmemoryprotocol/core` as a dependency, then mount the adapter over Recall's existing
 modules. The backend is ~30 lines bridging Recall's functions:
 
 ```ts
-import { UmpServer, generateKeyPair, createMcpServer, createHttpServer } from "@ump/core";
-import { RecallStore, type RecallBackend } from "@ump/core/adapters/recall/store";
+import { UmpServer, generateKeyPair, createMcpServer, createHttpServer } from "@universalmemoryprotocol/core";
+import { RecallStore, type RecallBackend } from "@universalmemoryprotocol/core/adapters/recall/store";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Recall's own modules:

@@ -6,7 +6,7 @@ First cut of the Universal Memory Protocol: spec + working L3 reference implemen
 
 ### Launch kit
 - `ump-memory` bin - a one-command **persistent** MCP memory server for any host
-  (`npx -y @ump/core ump-memory`): `JsonFileStore` at `~/.ump/memory.ump.json`
+  (`npx -y @universalmemoryprotocol/core ump-memory`): `JsonFileStore` at `~/.ump/memory.ump.json`
   plus a **stable operator key** (`~/.ump/key.json`), so records stay owned and
   signed across restarts. MCP stdio by default; `UMP_HTTP` for the HTTP binding.
 - `GOVERNANCE.md` - neutral-stewardship intent + the path to a working group.
@@ -21,7 +21,7 @@ First cut of the Universal Memory Protocol: spec + working L3 reference implemen
 - `docs/ADOPTION.md` - rollout plan, Recall→UMP mapping, governance.
 - `src/schema/ump-record.schema.json` - JSON Schema for the record.
 
-### Reference SDK (`@ump/core`)
+### Reference SDK (`@universalmemoryprotocol/core`)
 - Memory Record types (`src/types.ts`).
 - RFC 8785 canonicalization; BLAKE3 content hashing; Ed25519 signing with
   `did:key` identity (`src/canonical.ts`, `src/integrity.ts`, `src/id.ts`).
@@ -43,7 +43,7 @@ First cut of the Universal Memory Protocol: spec + working L3 reference implemen
 - Standard named **Universal Memory Protocol (UMP)** (was "Open Memory Protocol",
   which collides with an unrelated conversation-backup project). Record version
   field, URNs (`urn:ump:`), MCP tools (`ump.*`), file ext (`*.ump.json/.md`),
-  and package (`@ump/core`) all renamed. Domain target: universalmemoryprotocol.io.
+  and package (`@universalmemoryprotocol/core`) all renamed. Domain target: universalmemoryprotocol.io.
 
 ### L3 hardening
 - Capability-scoped access tokens (`src/capability.ts`): mint/verify/authorize

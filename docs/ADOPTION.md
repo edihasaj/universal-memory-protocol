@@ -7,7 +7,7 @@ from draft to ecosystem, leaning on assets we already own.
 
 ## 1. Strategy in one line
 
-Ship a working **reference SDK/server (`@ump/core`)** + **conformance suite**
+Ship a working **reference SDK/server (`@universalmemoryprotocol/core`)** + **conformance suite**
 first; use **Recall as the first rich production engine adapter**; make adoption
 cost ~an afternoon via the MCP profile; wrap existing stores with adapters so UMP
 delivers value with a *single* vendor on day one. Only then push for spec
@@ -39,7 +39,7 @@ Mapping:
 | file binding | CLAUDE.md / AGENTS.md / `.recall/context.md` | add `*.ump.json` + `*.ump.md` + `.well-known/ump.json` |
 
 Deliverable: Recall ships an `--ump` mode advertising `UMP 0.1 / L2` (then L3),
-proving the spec against a real memory engine while `@ump/core` remains the
+proving the spec against a real memory engine while `@universalmemoryprotocol/core` remains the
 neutral reference SDK/server.
 
 ## 3. Adapters (value with one vendor, day one)
@@ -75,7 +75,7 @@ Thin shims so UMP isn't all-or-nothing:
 - **Name:** **Universal Memory Protocol (UMP)**. Descriptive, adjacent to MCP,
   and clear about the missing interop layer: memory.
 - **License:** Apache-2.0 for the protocol GitHub repository; MIT for the
-  `@ump/core` npm package, adapters, examples, and package code; CC-BY-4.0 for
+  `@universalmemoryprotocol/core` npm package, adapters, examples, and package code; CC-BY-4.0 for
   documentation prose.
 - **Stewardship:** start single-author for velocity, but commit publicly to neutral
   governance early (a working group / foundation track) - the difference between a
@@ -96,7 +96,7 @@ Thin shims so UMP isn't all-or-nothing:
 
 ## 7. Remaining decisions
 
-1. **Implementation split** - keep `@ump/core` as the minimal standalone
+1. **Implementation split** - keep `@universalmemoryprotocol/core` as the minimal standalone
    reference server and Recall as one richer production implementation?
 2. **Ambition tier** - (a) a tight interchange + MCP profile we ship fast, or
    (b) the full negotiated protocol with signing/capability tokens aiming at

@@ -1,5 +1,5 @@
 {
-  "name": "@ump/core",
+  "name": "@universalmemoryprotocol/core",
   "version": "0.1.0",
   "description": "Universal Memory Protocol (UMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
   "type": "module",

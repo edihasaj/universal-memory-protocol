@@ -19,7 +19,7 @@ people find when browsing. Submit `ump-memory` everywhere an MCP server is liste
 > as an inspectable `.ump.json` file you own.
 
 ## Package registries
-- [ ] npm: publish `@ump/core` (bins: ump-memory, ump-serve, ump-conformance)
+- [ ] npm: publish `@universalmemoryprotocol/core` (bins: ump-memory, ump-serve, ump-conformance)
 - [ ] JSR (optional, ESM-native)
 
 ## Agent-framework ecosystems (adapters = new audiences)
