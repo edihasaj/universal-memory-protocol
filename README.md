@@ -107,7 +107,8 @@ profile (L1) in an afternoon.
 - **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
 - **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: Recall as reference impl, adapters, governance, the path to Anthropic/OpenAI.
 - **`src/`** - `@ump/core`, the reference SDK + minimal server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
-- **`JsonFileStore`** - dependency-free persistent store that writes portable `*.ump.json` while keeping retrieval hot in memory.
+- **Stores** - in-memory, JSON file, Markdown directory, Postgres, SQLite,
+  Redis, and BYO vector DB clients for Qdrant/Pinecone/Weaviate-style engines.
 - **`adapters/recall/`** - serve UMP over [Recall](https://github.com/edihasaj/recall)'s engine.
 - **`examples/round-trip.ts`** - write, recall, export, import across "vendors", signature intact.
 - **docs site** - lives in a separate repo (`universal-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
@@ -121,8 +122,28 @@ pnpm test                                               # conformance + binding 
 pnpm build                                              # tsup -> dist (esm + d.ts + bins)
 node --experimental-strip-types examples/round-trip.ts  # the cross-vendor demo
 UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
+node --experimental-strip-types src/bin/memory.ts               # persistent ~/.ump server
+UMP_STORE=markdown node --experimental-strip-types src/bin/memory.ts
 pnpm conformance http://localhost:4000                  # report the endpoint's proven conformance level
 ```
+
+## Store implementations
+
+`UmpServer` accepts any `MemoryStore`. The package ships dependency-light
+implementations for common adoption paths:
+
+| Store | Use case |
+| --- | --- |
+| `InMemoryStore` | tests, examples, ephemeral reference server |
+| `JsonFileStore` | local persistent `memory.ump.json` export |
+| `MarkdownDirectoryStore` | human-editable `*.ump.md` files |
+| `PostgresStore` | `pg`/Postgres-compatible client |
+| `SqliteStore` | `better-sqlite3` / `node:sqlite`-style client |
+| `RedisStore` | Redis hash persistence |
+| `VectorStore` / `QdrantStore` / `PineconeStore` / `WeaviateStore` | BYO vector DB client + embedding function |
+
+Vendor clients stay outside `@ump/core`, so adding UMP does not force native
+builds or cloud SDKs into every install.
 
 ## Name & domains
 

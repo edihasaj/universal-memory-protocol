@@ -17,7 +17,11 @@ export { MirrorStore } from "./stores/mirror.ts";
 export { JsonFileStore } from "./stores/file.ts";
 export { MarkdownDirectoryStore } from "./stores/markdown.ts";
 export { PostgresStore, type PostgresClient } from "./stores/postgres.ts";
-export { SqliteStore, type SqliteDatabase } from "./stores/sqlite.ts";
+export {
+  SqliteStore,
+  type SqliteDatabase,
+  type SqliteStatement,
+} from "./stores/sqlite.ts";
 export { RedisStore, type RedisClient } from "./stores/redis.ts";
 export {
   VectorStore,

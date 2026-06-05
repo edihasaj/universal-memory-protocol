@@ -11,6 +11,7 @@
  * so records stay owned, signed, and verifiable. Config via env:
  *
  *   UMP_DIR   data directory            (default: ~/.ump)
+ *   UMP_STORE json | markdown           (default: json)
  *   UMP_HTTP  also serve HTTP on a port (default: off; stdio only)
  */
 
@@ -21,6 +22,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   UmpServer,
   JsonFileStore,
+  MarkdownDirectoryStore,
   createMcpServer,
   createHttpServer,
   generateKeyPair,
@@ -28,15 +30,19 @@ import {
 } from "../index.ts";
 
 const dir = process.env.UMP_DIR || join(homedir(), ".ump");
+const storeKind = process.env.UMP_STORE || "json";
 mkdirSync(dir, { recursive: true });
 
 const key = loadOrCreateKey(join(dir, "key.json"));
-const store = await JsonFileStore.open(join(dir, "memory.ump.json"));
+const store =
+  storeKind === "markdown"
+    ? await MarkdownDirectoryStore.open(join(dir, "memory.d"))
+    : await JsonFileStore.open(join(dir, "memory.ump.json"));
 
 const server = new UmpServer({
   name: "ump-memory",
   version: "0.1.0",
-  conformance: "L3",
+  conformance: "L2",
   store,
   key,
 });
@@ -50,7 +56,7 @@ if (httpPort) {
 
 await createMcpServer(server).connect(new StdioServerTransport());
 log(`MCP binding on stdio`);
-log(`data ${dir}  owner ${key.did}`);
+log(`data ${dir}  store ${storeKind}  owner ${key.did}`);
 
 /** Load the operator key seed from disk, or create and persist a new one. */
 function loadOrCreateKey(path: string): KeyPair {
