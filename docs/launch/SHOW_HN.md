@@ -38,8 +38,8 @@ What's actually in the spec (the parts I think matter):
   can adopt a `.ump.json` export today or run the full signed runtime.
 
 Working reference SDK (MIT), conformance suite that self-certifies L3, and an
-adapter that serves it over an existing memory engine. Spec/docs are CC-BY-4.0;
-code/package is MIT.
+adapter that serves it over an existing memory engine. Protocol repo is
+Apache-2.0; package code is MIT; docs are CC-BY-4.0.
 
 I'd love feedback on the record format and the trust model specifically. Repo:
 https://github.com/<org>/universal-memory-protocol

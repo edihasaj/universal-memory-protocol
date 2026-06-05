@@ -49,7 +49,7 @@ It's real, not a slide deck:
 - conformance suite that self-certifies L3
 - an adapter that serves UMP over an existing memory engine
 
-Spec/docs CC-BY-4.0. Code/package MIT. Built to be vendor-neutral.
+Protocol repo Apache-2.0. Package MIT. Docs CC-BY-4.0. Built to be vendor-neutral.
 
 **8/**
 If you build agents, agent frameworks, or memory tools: I want UMP to be the

@@ -191,7 +191,10 @@ node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md
 
 ## License
 
-`@ump/core`, adapters, examples, and code are MIT. See [LICENSE](./LICENSE).
+Protocol GitHub repository: Apache-2.0. See [LICENSE](./LICENSE).
+
+`@ump/core`, adapters, examples, and package code are MIT. See
+[LICENSE-PACKAGE](./LICENSE-PACKAGE).
 
 Specification and documentation prose are CC-BY-4.0. See
 [LICENSE-DOCS](./LICENSE-DOCS).

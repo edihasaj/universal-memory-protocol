@@ -74,8 +74,9 @@ Thin shims so UMP isn't all-or-nothing:
 
 - **Name:** **Universal Memory Protocol (UMP)**. Descriptive, adjacent to MCP,
   and clear about the missing interop layer: memory.
-- **License:** MIT for `@ump/core`, adapters, examples, and code; CC-BY-4.0 for
-  the specification and documentation prose.
+- **License:** Apache-2.0 for the protocol GitHub repository; MIT for the
+  `@ump/core` npm package, adapters, examples, and package code; CC-BY-4.0 for
+  documentation prose.
 - **Stewardship:** start single-author for velocity, but commit publicly to neutral
   governance early (a working group / foundation track) - the difference between a
   trusted standard and a distrusted vendor spec. MCP's perceived neutrality was
