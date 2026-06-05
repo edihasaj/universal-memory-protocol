@@ -31,6 +31,15 @@ export {
   type VectorMemoryClient,
 } from "./stores/vector.ts";
 export {
+  importMemorySource,
+  importMemorySources,
+  parseMarkdownMemory,
+  type ImportedMemoryDraft,
+  type ImportOptions,
+  type ImportSource,
+  type ImportSourceKind,
+} from "./importers/filesystem.ts";
+export {
   UmpServer,
   type UmpServerOptions,
   type ChangeEvent,

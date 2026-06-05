@@ -39,6 +39,7 @@
     "./schema/ump-record.schema.json": "./src/schema/ump-record.schema.json"
   },
   "bin": {
+    "ump-import": "./dist/bin/import.js",
     "ump-memory": "./dist/bin/memory.js",
     "ump-serve": "./dist/bin/serve.js",
     "ump-conformance": "./dist/bin/conformance.js"

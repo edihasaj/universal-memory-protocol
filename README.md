@@ -124,6 +124,7 @@ node --experimental-strip-types examples/round-trip.ts  # the cross-vendor demo
 UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
 node --experimental-strip-types src/bin/memory.ts               # persistent ~/.ump server
 UMP_STORE=markdown node --experimental-strip-types src/bin/memory.ts
+node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md AGENTS.md
 pnpm conformance http://localhost:4000                  # report the endpoint's proven conformance level
 ```
 
@@ -144,6 +145,31 @@ implementations for common adoption paths:
 
 Vendor clients stay outside `@ump/core`, so adding UMP does not force native
 builds or cloud SDKs into every install.
+
+## Import existing memory files
+
+UMP stays separate from vendor/system-specific memory files, but `@ump/core`
+ships import helpers so people have a practical migration path:
+
+```bash
+# Import CLAUDE.md / AGENTS.md / generic Markdown into portable UMP drafts.
+node --experimental-strip-types src/bin/import.ts \
+  --owner did:key:zYourOwner \
+  --project github.com/you/repo \
+  --out .ump/import.ump.json \
+  CLAUDE.md AGENTS.md ~/Documents/main
+```
+
+Supported source kinds:
+
+- `claude` - `CLAUDE.md` style instructions.
+- `agents` - `AGENTS.md` style repo/agent instructions.
+- `recall` - Recall exports/context files.
+- `obsidian` - vault folders and notes.
+- `generic_markdown` - any Markdown file or directory.
+
+Importers return UMP `MemoryDraft` records with `provenance.method` like
+`filesystem:claude`. They are adoption bridges, not protocol requirements.
 
 ## Name & domains
 

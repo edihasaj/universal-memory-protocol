@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     "adapters/recall/index": "adapters/recall/index.ts",
+    "bin/import": "src/bin/import.ts",
     "bin/memory": "src/bin/memory.ts",
     "bin/serve": "src/bin/serve.ts",
     "bin/conformance": "src/bin/conformance.ts",
