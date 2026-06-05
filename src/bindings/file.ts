@@ -9,6 +9,7 @@
  */
 
 import { UMP_VERSION, type Consent, type MemoryRecord } from "../types.ts";
+import { redactRecord } from "../policy.ts";
 
 // ── JSON array binding ──────────────────────────────────────────────────
 
@@ -65,25 +66,7 @@ export function fromMarkdown(text: string): MemoryRecord {
 export function exportRecords(records: MemoryRecord[]): MemoryRecord[] {
   return records
     .filter((r) => r.consent?.exportable !== false)
-    .map(redact);
-}
-
-function redact(record: MemoryRecord): MemoryRecord {
-  const paths = record.consent?.redact;
-  if (!paths || paths.length === 0) return record;
-  const clone = structuredClone(record) as MemoryRecord & Record<string, unknown>;
-  for (const path of paths) deletePath(clone, path.split("."));
-  return clone;
-}
-
-function deletePath(obj: Record<string, unknown>, segs: string[]): void {
-  let cur: Record<string, unknown> = obj;
-  for (let i = 0; i < segs.length - 1; i++) {
-    const next = cur[segs[i]!];
-    if (next == null || typeof next !== "object") return;
-    cur = next as Record<string, unknown>;
-  }
-  delete cur[segs[segs.length - 1]!];
+    .map(redactRecord);
 }
 
 // ── validation ──────────────────────────────────────────────────────────

@@ -173,6 +173,48 @@ describe("scope filtering before ranking (SPEC §5.3)", () => {
   });
 });
 
+describe("consent enforcement (SPEC §2.7)", () => {
+  it("redacts public recall results outside the owner boundary", async () => {
+    const s = makeServer();
+    const { id } = await s.remember(draft("public deployment token", {
+      body: { text: "public deployment token", structured: { token: "sk-123", safe: 1 } },
+      scope: { owner: OWNER.did, project: "edihasaj/recall", visibility: "public" },
+      consent: { redact: ["body.structured.token"] },
+    }));
+
+    const publicRead = await s.recall({ query: "deployment token" });
+    const publicRecord = publicRead.results.find((r) => r.record.id === id)!.record;
+    expect((publicRecord.body.structured as any).token).toBeUndefined();
+    expect((publicRecord.body.structured as any).safe).toBe(1);
+
+    const ownerRead = await s.recall({
+      query: "deployment token",
+      scope: { owner: OWNER.did },
+    });
+    const ownerRecord = ownerRead.results.find((r) => r.record.id === id)!.record;
+    expect((ownerRecord.body.structured as any).token).toBe("sk-123");
+  });
+
+  it("tombstones expired retained records and excludes them from recall", async () => {
+    const s = makeServer();
+    const { id } = await s.remember(draft("expired retention note", {
+      time: {
+        created: "2026-06-01T10:00:00Z",
+        observed: "2026-06-01T10:00:00Z",
+        valid_from: "2026-06-01T10:00:00Z",
+      },
+      consent: { retention: "P1D" },
+    }));
+
+    const recalled = await s.recall({
+      query: "expired retention note",
+      scope: { owner: OWNER.did },
+    });
+    expect(recalled.results.find((r) => r.record.id === id)).toBeUndefined();
+    expect((await s.get(id)).lifecycle?.status).toBe("tombstoned");
+  });
+});
+
 describe("L3 signing on write + inbound enforcement", () => {
   it("signs records when a key is configured", async () => {
     const s = makeServer({ sign: true });

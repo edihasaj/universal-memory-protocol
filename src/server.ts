@@ -21,7 +21,11 @@ import type {
 import { UMP_VERSION, UmpError } from "./types.ts";
 import type { MemoryStore } from "./store.ts";
 import { validateDraft } from "./validate.ts";
-import { recordVisibleForScope } from "./policy.ts";
+import {
+  recordForScope,
+  recordVisibleForScope,
+  retentionExpired,
+} from "./policy.ts";
 
 /** A record-change event emitted to `subscribe` listeners (SPEC §3.8). */
 export interface ChangeEvent {
@@ -87,15 +91,21 @@ export class UmpServer {
   async recall(req: RecallRequest): Promise<RecallResponse> {
     if (!req.query?.trim()) throw new UmpError("invalid_record", "empty query");
     const results = await this.store.search(req);
-    return {
-      results: results.filter((r) => recordVisibleForScope(r.record, req.scope)),
-    };
+    const filtered = [];
+    for (const result of results) {
+      if (!recordVisibleForScope(result.record, req.scope)) continue;
+      const record = await this.applyRetention(result.record);
+      if (record.lifecycle?.status === "tombstoned") continue;
+      filtered.push({ ...result, record: recordForScope(record, req.scope) });
+    }
+    return { results: filtered };
   }
 
-  async get(id: string): Promise<MemoryRecord> {
+  async get(id: string, scope?: Partial<MemoryRecord["scope"]>): Promise<MemoryRecord> {
     const r = await this.store.get(id);
     if (!r) throw new UmpError("not_found", `no record ${id}`);
-    return r;
+    const record = await this.applyRetention(r);
+    return scope ? recordForScope(record, scope) : record;
   }
 
   async remember(draft: MemoryDraft): Promise<RememberResponse> {
@@ -250,6 +260,25 @@ export class UmpServer {
       consent: draft.consent,
       integrity: draft.integrity,
     };
+  }
+
+  private async applyRetention(record: MemoryRecord): Promise<MemoryRecord> {
+    if (
+      record.lifecycle?.status === "tombstoned" ||
+      !retentionExpired(record, this.opts.now())
+    ) {
+      return record;
+    }
+    const tombstoned: MemoryRecord = {
+      ...record,
+      lifecycle: { ...record.lifecycle, status: "tombstoned" },
+      time: { ...record.time, valid_to: record.time.valid_to ?? this.iso() },
+      integrity: undefined,
+    };
+    const finalized = this.finalize(tombstoned);
+    await this.store.put(finalized);
+    this.emit({ type: "tombstoned", id: finalized.id, record: finalized });
+    return finalized;
   }
 
   /** Assign id (content-addressed if signing) and sign if a key is present. */

@@ -21,7 +21,12 @@ export {
 } from "./server.ts";
 export { rehydrate, type RehydrateOptions } from "./rehydrate.ts";
 export { validateDraft, isValidDraft } from "./validate.ts";
-export { recordVisibleForScope } from "./policy.ts";
+export {
+  recordForScope,
+  recordVisibleForScope,
+  redactRecord,
+  retentionExpired,
+} from "./policy.ts";
 export {
   mintCapability,
   verifyCapability,
