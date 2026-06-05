@@ -129,9 +129,11 @@ does not force native builds or cloud clients into every project.
   sqlite-vec / Qdrant / Pinecone / Weaviate) **with embeddings enabled**, or
   `RecallStore`. These earn their extra latency only when embeddings are actually
   populated; without them you get lexical recall at higher cost than the file store.
-- **Recall as engine (`RecallStore`):** opt-in. Reads map faithfully and writes
-  are direct + fast; enable Recall's embedding/consolidation layer to get its
-  smarter retrieval. Without it, prefer `JsonFileStore`.
+- **Recall as engine (`RecallStore`):** opt-in semantic tier. `recall ump` warms
+  a local embedding model (no API key) and serves real vector + BM25 (RRF) search
+  - in benchmarks, paraphrase top-1 recall jumps from 1/8 (lexical) to 5/8. The
+  cost is embedding compute (~100ms write, ~200ms recall), so reach for it when
+  retrieval quality matters more than latency; otherwise `JsonFileStore` wins.
 
 Switching is one line: point `UmpServer` at a different `MemoryStore`. The record
 format, bindings, and protocol are identical across all of them.
