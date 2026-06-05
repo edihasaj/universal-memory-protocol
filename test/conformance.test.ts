@@ -203,7 +203,12 @@ describe("file binding round-trip (SPEC §4.3, §6.3)", () => {
 
   it("markdown round-trips losslessly", async () => {
     const s = makeServer({ sign: true });
-    const { id } = await s.remember(draft("markdown\nbody memory"));
+    const { id } = await s.remember(draft("markdown\nbody memory", {
+      body: {
+        text: "markdown\nbody memory",
+        structured: { token: "safe-to-round-trip", retries: 2 },
+      },
+    }));
     const rec = await s.get(id);
     const back = file.fromMarkdown(file.toMarkdown(rec));
     expect(back).toEqual(rec);

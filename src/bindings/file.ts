@@ -38,9 +38,14 @@ export function fromNdjson(text: string): MemoryRecord[] {
 const FM = "---";
 
 export function toMarkdown(record: MemoryRecord): string {
-  const { body, ...meta } = record;
+  const { body, ...recordMeta } = record;
+  const { text, ...bodyMeta } = body;
+  const meta =
+    Object.keys(bodyMeta).length > 0
+      ? { ...recordMeta, body: bodyMeta }
+      : recordMeta;
   const fm = JSON.stringify(meta, null, 2);
-  return `${FM}\n${fm}\n${FM}\n\n${body.text}\n`;
+  return `${FM}\n${fm}\n${FM}\n\n${text}\n`;
 }
 
 export function fromMarkdown(text: string): MemoryRecord {
