@@ -1,9 +1,9 @@
 /**
- * RecallStore - an AMP `MemoryStore` backed by Recall's engine.
+ * RecallStore - an UMP `MemoryStore` backed by Recall's engine.
  *
  * Recall keeps its native lifecycle (repo-quality promotion, dedup,
  * consolidation). This store maps reads faithfully; writes flow into Recall's
- * capture pipeline (text → candidate memory) rather than storing the AMP record
+ * capture pipeline (text → candidate memory) rather than storing the UMP record
  * verbatim - the correct behavior when Recall is the engine. Inject a
  * `RecallBackend` so this file never imports Recall's native (sqlite-vec) deps.
  */

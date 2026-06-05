@@ -1,9 +1,9 @@
 /**
- * Agent Memory Protocol - record & operation types (AMP 0.1).
+ * Universal Memory Protocol - record & operation types (UMP 0.1).
  * Mirrors SPEC.md §2 (record) and §3 (operations). Transport-neutral.
  */
 
-export const AMP_VERSION = "0.1" as const;
+export const UMP_VERSION = "0.1" as const;
 
 export type MemoryKind =
   | "semantic"
@@ -64,7 +64,7 @@ export type RelationType =
 
 export interface Relation {
   type: RelationType;
-  /** A record `urn:amp:…` or an `entity:<name>` node. */
+  /** A record `urn:ump:…` or an `entity:<name>` node. */
   target: string;
 }
 
@@ -96,7 +96,7 @@ export interface Integrity {
 }
 
 export interface MemoryRecord {
-  amp: typeof AMP_VERSION;
+  ump: typeof UMP_VERSION;
   id: string;
   kind: MemoryKind;
   body: MemoryBody;
@@ -112,8 +112,8 @@ export interface MemoryRecord {
 }
 
 /** A record with server-managed fields optional (input to `remember`). */
-export type MemoryDraft = Omit<MemoryRecord, "amp" | "id" | "time"> & {
-  amp?: typeof AMP_VERSION;
+export type MemoryDraft = Omit<MemoryRecord, "ump" | "id" | "time"> & {
+  ump?: typeof UMP_VERSION;
   id?: string;
   time?: Partial<MemoryTime>;
 };
@@ -124,7 +124,7 @@ export type ConformanceLevel = "L0" | "L1" | "L2" | "L3";
 
 export interface Capabilities {
   server: { name: string; version: string };
-  amp: typeof AMP_VERSION;
+  ump: typeof UMP_VERSION;
   conformance: ConformanceLevel;
   kinds: MemoryKind[];
   bindings: Array<"mcp" | "http" | "file">;
@@ -188,7 +188,7 @@ export interface FeedbackRequest {
   session?: string;
 }
 
-export type AmpErrorCode =
+export type UmpErrorCode =
   | "unauthorized"
   | "forbidden_scope"
   | "not_found"
@@ -198,11 +198,11 @@ export type AmpErrorCode =
   | "unsupported"
   | "rate_limited";
 
-export class AmpError extends Error {
-  code: AmpErrorCode;
-  constructor(code: AmpErrorCode, message: string) {
+export class UmpError extends Error {
+  code: UmpErrorCode;
+  constructor(code: UmpErrorCode, message: string) {
     super(`${code}: ${message}`);
     this.code = code;
-    this.name = "AmpError";
+    this.name = "UmpError";
   }
 }

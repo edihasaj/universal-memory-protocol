@@ -1,13 +1,13 @@
 /**
- * Lightweight structural validation of a Memory Record against the AMP 0.1
+ * Lightweight structural validation of a Memory Record against the UMP 0.1
  * constraints (SPEC §2). Dependency-free - checks the same invariants the JSON
- * Schema encodes (src/schema/amp-record.schema.json) without a schema engine.
+ * Schema encodes (src/schema/ump-record.schema.json) without a schema engine.
  *
  * Returns the list of problems; empty = valid.
  */
 
 import {
-  AMP_VERSION,
+  UMP_VERSION,
   type MemoryDraft,
   type MemoryKind,
   type Visibility,
@@ -22,14 +22,14 @@ export function validateDraft(d: MemoryDraft): string[] {
   const errs: string[] = [];
   const req = (cond: unknown, msg: string) => { if (!cond) errs.push(msg); };
 
-  if (d.amp !== undefined && d.amp !== AMP_VERSION) errs.push(`amp version must be ${AMP_VERSION}`);
+  if (d.ump !== undefined && d.ump !== UMP_VERSION) errs.push(`ump version must be ${UMP_VERSION}`);
   req(d.body?.text && typeof d.body.text === "string", "body.text is required");
   req(KINDS.includes(d.kind), `kind must be one of ${KINDS.join("|")}`);
   req(d.scope?.owner, "scope.owner (DID) is required");
   req(d.scope && VIS.includes(d.scope.visibility), `scope.visibility must be ${VIS.join("|")}`);
 
-  if (d.id !== undefined && !/^urn:amp:[a-z2-7]+$/.test(d.id)) {
-    errs.push("id must match urn:amp:<base32>");
+  if (d.id !== undefined && !/^urn:ump:[a-z2-7]+$/.test(d.id)) {
+    errs.push("id must match urn:ump:<base32>");
   }
   if (d.lifecycle?.status && !STATUS.includes(d.lifecycle.status)) {
     errs.push(`lifecycle.status must be ${STATUS.join("|")}`);

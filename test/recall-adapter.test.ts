@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AmpServer, generateKeyPair, verify } from "../src/index.ts";
+import { UmpServer, generateKeyPair, verify } from "../src/index.ts";
 import { RecallStore, type RecallBackend } from "../adapters/recall/store.ts";
 import {
   recallMemoryToRecord,
@@ -53,17 +53,17 @@ function backend(): RecallBackend {
   };
 }
 
-describe("Recall ↔ AMP mapping", () => {
+describe("Recall ↔ UMP mapping", () => {
   it("maps types to kinds and round-trips ids", () => {
     expect(recallTypeToKind("rule")).toBe("procedural");
     expect(recallTypeToKind("decision")).toBe("semantic");
     expect(recallTypeToKind("gotcha")).toBe("episodic");
-    const amp = toAmpId(rows[0]!.id);
-    expect(amp).toMatch(/^urn:amp:[a-z2-7]+$/);
-    expect(fromAmpId(amp)).toBe(rows[0]!.id);
+    const ump = toAmpId(rows[0]!.id);
+    expect(ump).toMatch(/^urn:ump:[a-z2-7]+$/);
+    expect(fromAmpId(ump)).toBe(rows[0]!.id);
   });
 
-  it("maps a Recall memory to a valid AMP record", () => {
+  it("maps a Recall memory to a valid UMP record", () => {
     const rec = recallMemoryToRecord(rows[0]!, OWNER);
     expect(rec.kind).toBe("procedural");
     expect(rec.scope.owner).toBe(OWNER);
@@ -77,9 +77,9 @@ describe("Recall ↔ AMP mapping", () => {
   });
 });
 
-describe("RecallStore under AmpServer", () => {
-  it("recalls Recall memories as AMP results with signals", async () => {
-    const server = new AmpServer({
+describe("RecallStore under UmpServer", () => {
+  it("recalls Recall memories as UMP results with signals", async () => {
+    const server = new UmpServer({
       name: "recall", version: "1.0.0", store: new RecallStore(backend(), { owner: OWNER }),
     });
     const res = await server.recall({ query: "pnpm package manager", scope: { owner: OWNER, project: "edihasaj/recall" } });
@@ -90,7 +90,7 @@ describe("RecallStore under AmpServer", () => {
 
   it("get maps by id; remember routes into Recall capture", async () => {
     const be = backend();
-    const server = new AmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(be, { owner: OWNER }) });
+    const server = new UmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(be, { owner: OWNER }) });
     const got = await server.get(toAmpId(rows[0]!.id));
     expect(got.body.text).toContain("pnpm");
 

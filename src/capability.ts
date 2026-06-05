@@ -18,7 +18,7 @@ import type { MemoryScope } from "./types.ts";
 export type CapabilityVerb = "read" | "write" | "derive" | "export";
 
 export interface CapabilityClaims {
-  v: "amp-cap/0.1";
+  v: "ump-cap/0.1";
   /** Issuer = owner DID (the signer). */
   iss: string;
   /** Optional audience DID this token is minted for. */
@@ -47,7 +47,7 @@ export function mintCapability(
   },
 ): string {
   const claims: CapabilityClaims = {
-    v: "amp-cap/0.1",
+    v: "ump-cap/0.1",
     iss: key.did,
     aud: grant.aud,
     verbs: grant.verbs,

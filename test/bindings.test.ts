@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
-  AmpServer,
+  UmpServer,
   InMemoryStore,
   createMcpServer,
   createHttpHandler,
 } from "../src/index.ts";
 
 function srv() {
-  return new AmpServer({
+  return new UmpServer({
     name: "t",
     version: "0",
     store: new InMemoryStore(),
@@ -16,11 +16,11 @@ function srv() {
 }
 
 describe("MCP binding (SPEC §4.1)", () => {
-  it("constructs a Server exposing the AMP tool surface", () => {
+  it("constructs a Server exposing the UMP tool surface", () => {
     const server = createMcpServer(srv());
     expect(server).toBeDefined();
     // low-level Server exposes request-handler registration; construction
-    // wiring all 7 amp.* tools must not throw.
+    // wiring all 7 ump.* tools must not throw.
     expect(typeof server.connect).toBe("function");
   });
 });
@@ -28,11 +28,11 @@ describe("MCP binding (SPEC §4.1)", () => {
 describe("HTTP binding (SPEC §4.2)", () => {
   it("returns capabilities via the handler", async () => {
     const handler = createHttpHandler(srv());
-    const { req, res, body } = mockHttp("GET", "/amp/capabilities");
+    const { req, res, body } = mockHttp("GET", "/ump/capabilities");
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(200);
     const json = JSON.parse(body());
-    expect(json.amp).toBe("0.1");
+    expect(json.ump).toBe("0.1");
     expect(json.bindings).toContain("mcp");
   });
 

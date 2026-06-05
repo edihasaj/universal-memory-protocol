@@ -1,16 +1,16 @@
 {
-  "name": "@amp/core",
+  "name": "@ump/core",
   "version": "0.1.0",
-  "description": "Agent Memory Protocol (AMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
+  "description": "Universal Memory Protocol (UMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
   "type": "module",
   "license": "Apache-2.0",
   "author": "Edi Hasaj <edihasaj@gmail.com>",
-  "homepage": "https://agentmemoryprotocol.io",
+  "homepage": "https://universalmemoryprotocol.io",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edihasaj/agent-memory-protocol.git"
+    "url": "git+https://github.com/edihasaj/universal-memory-protocol.git"
   },
-  "bugs": "https://github.com/edihasaj/agent-memory-protocol/issues",
+  "bugs": "https://github.com/edihasaj/universal-memory-protocol/issues",
   "keywords": [
     "agent-memory",
     "memory",
@@ -36,11 +36,11 @@
       "types": "./dist/adapters/recall/index.d.ts",
       "import": "./dist/adapters/recall/index.js"
     },
-    "./schema/amp-record.schema.json": "./src/schema/amp-record.schema.json"
+    "./schema/ump-record.schema.json": "./src/schema/ump-record.schema.json"
   },
   "bin": {
-    "amp-serve": "./dist/bin/serve.js",
-    "amp-conformance": "./dist/bin/conformance.js"
+    "ump-serve": "./dist/bin/serve.js",
+    "ump-conformance": "./dist/bin/conformance.js"
   },
   "files": [
     "dist",

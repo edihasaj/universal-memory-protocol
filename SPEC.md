@@ -1,8 +1,8 @@
-# Agent Memory Protocol - Specification
+# Universal Memory Protocol - Specification
 
 **Version:** 0.1 (draft) · **Status:** request for comments
 
-This document specifies AMP: a portable record format and a set of negotiated
+This document specifies UMP: a portable record format and a set of negotiated
 operations for reading, writing, and exchanging agent memory across harnesses,
 stores, and vendors.
 
@@ -12,7 +12,7 @@ The key words MUST, SHOULD, MAY are used per RFC 2119.
 
 ## 1. Design constraints
 
-AMP is bound by five constraints, in priority order. Every decision below traces
+UMP is bound by five constraints, in priority order. Every decision below traces
 to one of these.
 
 1. **Minimal surface.** Six operations, one record type. If it can live in an
@@ -31,14 +31,14 @@ to one of these.
 
 ## 2. The Memory Record
 
-The record is the atom of AMP. Every binding moves records; every operation
+The record is the atom of UMP. Every binding moves records; every operation
 produces or consumes them. It is transport-neutral JSON; an equivalent Markdown
 projection is defined in §6.3.
 
 ```jsonc
 {
-  "amp": "0.1",                          // REQUIRED. spec version
-  "id": "urn:amp:9f2c…",                 // REQUIRED. stable, globally unique
+  "ump": "0.1",                          // REQUIRED. spec version
+  "id": "urn:ump:9f2c…",                 // REQUIRED. stable, globally unique
   "kind": "semantic",                    // REQUIRED. see §2.1
   "body": {                              // REQUIRED. the memory itself
     "text": "Use pnpm, never npm, in this repo.",
@@ -68,11 +68,11 @@ projection is defined in §6.3.
     "status": "active"                   // active | candidate | tombstoned
   },
 
-  "supersedes": ["urn:amp:1a…"],         // OPTIONAL. ids this replaces
+  "supersedes": ["urn:ump:1a…"],         // OPTIONAL. ids this replaces
   "superseded_by": [],                   // set by engine on revise
 
   "relations": [                         // OPTIONAL. typed links (§2.5)
-    { "type": "contradicts", "target": "urn:amp:7b…" },
+    { "type": "contradicts", "target": "urn:ump:7b…" },
     { "type": "about",       "target": "entity:pnpm" }
   ],
 
@@ -133,7 +133,7 @@ linked via `supersedes`. History is queryable. (Model from Zep/Graphiti.)
 ### 2.4 Lifecycle hints
 
 `confidence`, `salience`, `decay`, `status` are **engine-facing hints**, not
-normative semantics. AMP deliberately does **not** standardize promotion logic or
+normative semantics. UMP deliberately does **not** standardize promotion logic or
 decay curves - those are where engines compete (Recall's repo-quality gating,
 MemoryOS's FIFO tiers). Standardizing them would make the wire brittle. Consumers
 MAY use them for ranking; producers SHOULD set them when known.
@@ -142,7 +142,7 @@ MAY use them for ranking; producers SHOULD set them when known.
 
 A small open vocabulary; consumers MAY ignore unknown types. Reserved:
 `about` (subject/entity), `contradicts`, `depends_on`, `derived_from`,
-`duplicate_of`. `target` is a record `urn:amp:…` or an `entity:<name>` node. This
+`duplicate_of`. `target` is a record `urn:ump:…` or an `entity:<name>` node. This
 is the seam for knowledge-graph engines (Recall/oktapod entity graphs) without
 mandating one.
 
@@ -181,11 +181,11 @@ Negotiation handshake. No memory side effects.
 
 ```jsonc
 // → request
-{ "client": { "name": "claude-code", "amp": "0.1" } }
+{ "client": { "name": "claude-code", "ump": "0.1" } }
 // ← response
 {
   "server": { "name": "recall", "version": "1.4.0" },
-  "amp": "0.1",
+  "ump": "0.1",
   "conformance": "L3",
   "kinds": ["semantic","episodic","procedural","working","identity"],
   "bindings": ["mcp","http","file"],
@@ -225,7 +225,7 @@ signals so the client can re-rank or explain.
 }
 ```
 
-Retrieval is **engine-agnostic**: AMP standardizes the *interface and the signal
+Retrieval is **engine-agnostic**: UMP standardizes the *interface and the signal
 names*, not the algorithm (vector, BM25, hybrid, graph-walk all conform). Servers
 SHOULD honor `valid_at` for point-in-time (bi-temporal) queries. The default
 `valid_at` is "now".
@@ -241,7 +241,7 @@ per its own dedup policy; it MUST report which.
               "scope":{ "owner":"did:…","project":"…/recall" },
               "provenance":{ "actor":"did:…","actor_kind":"user","method":"user_correction" } } }
 // ← response
-{ "id": "urn:amp:…", "result": "created" }   // created | merged | rejected
+{ "id": "urn:ump:…", "result": "created" }   // created | merged | rejected
 ```
 
 A server MUST reject (not silently store) records that fail consent/policy or, at
@@ -250,7 +250,7 @@ L3, signature verification.
 ### 3.4 `get`
 
 ```jsonc
-{ "id": "urn:amp:…" }            // → { "record": { … } } | error not_found
+{ "id": "urn:ump:…" }            // → { "record": { … } } | error not_found
 ```
 
 ### 3.5 `revise`
@@ -260,9 +260,9 @@ prior's `valid_to` and `superseded_by`. The old record remains queryable with
 `valid_at` in the past.
 
 ```jsonc
-{ "id": "urn:amp:1a…", "patch": { "body": { "text": "Use bun, not pnpm." },
+{ "id": "urn:ump:1a…", "patch": { "body": { "text": "Use bun, not pnpm." },
                                   "time": { "valid_from": "2026-06-04T10:00:00Z" } } }
-// ← { "id": "urn:amp:NEW…", "supersedes": ["urn:amp:1a…"] }
+// ← { "id": "urn:ump:NEW…", "supersedes": ["urn:ump:1a…"] }
 ```
 
 ### 3.6 `forget`
@@ -272,7 +272,7 @@ excluded from default `recall` but retained for audit unless `consent.retention`
 or an explicit `hard:true` (owner-only) demands erasure.
 
 ```jsonc
-{ "id":"urn:amp:…", "reason":"user_revoked", "hard": false }   // → { "result":"tombstoned" }
+{ "id":"urn:ump:…", "reason":"user_revoked", "hard": false }   // → { "result":"tombstoned" }
 ```
 
 ### 3.7 Errors
@@ -297,18 +297,18 @@ speaks via `capabilities.bindings`.
 
 ### 4.1 MCP profile (PRIMARY)
 
-The whole point: any MCP client speaks AMP with no new transport.
+The whole point: any MCP client speaks UMP with no new transport.
 
 - Each operation is exposed as an **MCP tool** with a reserved name:
-  `amp.capabilities`, `amp.recall`, `amp.remember`, `amp.get`, `amp.revise`,
-  `amp.forget`, and (L3) `amp.feedback`. Tool input/output schemas are §3.
-- Stored memories MAY also be exposed as **MCP Resources** under the `amp://`
-  URI scheme (`amp://{project}/{id}`) for read-only browsing.
+  `ump.capabilities`, `ump.recall`, `ump.remember`, `ump.get`, `ump.revise`,
+  `ump.forget`, and (L3) `ump.feedback`. Tool input/output schemas are §3.
+- Stored memories MAY also be exposed as **MCP Resources** under the `ump://`
+  URI scheme (`ump://{project}/{id}`) for read-only browsing.
 - `capabilities` is derivable from the tool list, so a minimal server can skip
   the explicit tool and just expose the others.
 
 Because Claude Code, Codex, and every MCP host already discover and call MCP
-tools, an AMP-over-MCP server is adoptable **today** with zero spec changes on
+tools, an UMP-over-MCP server is adoptable **today** with zero spec changes on
 the host side. This is the adoption wedge.
 
 ### 4.2 HTTP binding
@@ -316,8 +316,8 @@ the host side. This is the adoption wedge.
 For non-MCP consumers (web apps, ChatGPT actions, daemons). JSON over HTTP:
 
 ```
-POST /amp/recall     POST /amp/remember     GET  /amp/memory/{id}
-POST /amp/revise     POST /amp/forget       GET  /amp/capabilities
+POST /ump/recall     POST /ump/remember     GET  /ump/memory/{id}
+POST /ump/revise     POST /ump/forget       GET  /ump/capabilities
 ```
 
 Auth via capability tokens (§5.2) in `Authorization: Bearer`. (Recall's existing
@@ -327,15 +327,15 @@ daemon endpoints - `/compile`, `/correct` - map onto this with thin aliases.)
 
 The "AGENTS.md of memory" - portable, git-friendly, offline, no server:
 
-- `*.amp.json` - a JSON array of records (or NDJSON for streaming).
-- `*.amp.md` - Markdown projection (§6.3), human- and Obsidian-friendly, with a
+- `*.ump.json` - a JSON array of records (or NDJSON for streaming).
+- `*.ump.md` - Markdown projection (§6.3), human- and Obsidian-friendly, with a
   YAML/JSON-LD front-matter header carrying the structured fields. (Model from
   MIF's dual format.)
-- Discovery: a repo/site publishes `/.well-known/amp.json` (a manifest pointing
+- Discovery: a repo/site publishes `/.well-known/ump.json` (a manifest pointing
   at exports + the server endpoint, if any), mirroring `llms.txt`/AGENTS.md
   convention.
 
-This binding makes AMP adoptable with *zero code* - a tool just reads files.
+This binding makes UMP adoptable with *zero code* - a tool just reads files.
 
 ---
 
@@ -383,15 +383,15 @@ For hashing/signing: JCS (RFC 8785) canonical JSON over the record minus the
 
 ### 6.2 IDs
 
-`urn:amp:<id>` where `<id>` is either a random 128-bit base32 string (L1) or the
+`urn:ump:<id>` where `<id>` is either a random 128-bit base32 string (L1) or the
 content hash (L2+, content-addressed → dedup-friendly and tamper-evident).
 
-### 6.3 Markdown projection (`*.amp.md`)
+### 6.3 Markdown projection (`*.ump.md`)
 
 ```markdown
 ---
-amp: "0.1"
-id: urn:amp:9f2c…
+ump: "0.1"
+id: urn:ump:9f2c…
 kind: procedural
 scope: { owner: did:key:z6Mk…, project: …/recall, visibility: private }
 time: { observed: 2026-06-04T09:58:00Z, valid_from: 2026-06-04T00:00:00Z }
@@ -402,7 +402,7 @@ Always run `pnpm gate` before handoff.
 ```
 
 The body is Markdown; the structured fields are front-matter. A round-trip
-between `*.amp.md` and `*.amp.json` MUST be lossless for L2 fields.
+between `*.ump.md` and `*.ump.json` MUST be lossless for L2 fields.
 
 ---
 
@@ -410,12 +410,12 @@ between `*.amp.md` and `*.amp.json` MUST be lossless for L2 fields.
 
 | Level | MUST support |
 |-------|--------------|
-| **L0 Portable Record** | Parse + emit `*.amp.json` / `*.amp.md`; honor `consent.redact` on export. |
+| **L0 Portable Record** | Parse + emit `*.ump.json` / `*.ump.md`; honor `consent.redact` on export. |
 | **L1 Core** | L0 + `capabilities`, `recall`, `remember`, `get`; all 5 kinds; one binding. |
 | **L2 Standard** | L1 + `revise`, `forget`; bi-temporal `valid_at`; provenance; scope + consent enforcement. |
 | **L3 Full** | L2 + `feedback`, `subscribe`; integrity verify on read & sign on write; capability tokens; injection-resistant rehydration. |
 
-A product states e.g. "AMP 0.1 / L2 / MCP+file bindings". Test vectors and a
+A product states e.g. "UMP 0.1 / L2 / MCP+file bindings". Test vectors and a
 conformance suite ship with the reference implementation (see ADOPTION.md).
 
 ---

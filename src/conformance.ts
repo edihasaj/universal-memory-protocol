@@ -1,5 +1,5 @@
 /**
- * Conformance runner (SPEC §7). Exercises an AMP HTTP endpoint and reports the
+ * Conformance runner (SPEC §7). Exercises an UMP HTTP endpoint and reports the
  * highest level it satisfies (L0-L3). Used by the CLI (`src/bin/conformance.ts`)
  * and by tests against the in-process HTTP binding.
  */
@@ -53,27 +53,27 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   let createdId = "";
   let createdRecord: MemoryRecord | undefined;
   try {
-    const caps = await call("GET", "/amp/capabilities");
+    const caps = await call("GET", "/ump/capabilities");
     add("L1.capabilities", "L1",
-      caps.status === 200 && caps.json?.amp && Array.isArray(caps.json?.kinds) && caps.json.kinds.length === 5,
+      caps.status === 200 && caps.json?.ump && Array.isArray(caps.json?.kinds) && caps.json.kinds.length === 5,
       `status ${caps.status}, kinds ${caps.json?.kinds?.length}`);
 
-    const rem = await call("POST", "/amp/remember", {
+    const rem = await call("POST", "/ump/remember", {
       kind: "procedural",
       body: { text: "conformance: run the gate before handoff" },
-      scope: { owner, project: "amp/conformance", visibility: "private" },
+      scope: { owner, project: "ump/conformance", visibility: "private" },
       provenance: { actor: owner, actor_kind: "user", method: "user_correction" },
     });
     createdId = rem.json?.id ?? "";
     add("L1.remember", "L1", rem.status === 200 && !!createdId && rem.json?.result === "created",
       `status ${rem.status}, result ${rem.json?.result}`);
 
-    const got = await call("GET", `/amp/memory/${encodeURIComponent(createdId)}`);
+    const got = await call("GET", `/ump/memory/${encodeURIComponent(createdId)}`);
     createdRecord = got.json?.record;
     add("L1.get", "L1", got.status === 200 && !!createdRecord?.body?.text, `status ${got.status}`);
 
-    const rec = await call("POST", "/amp/recall", {
-      query: "gate handoff", scope: { owner, project: "amp/conformance" },
+    const rec = await call("POST", "/ump/recall", {
+      query: "gate handoff", scope: { owner, project: "ump/conformance" },
     });
     add("L1.recall", "L1",
       rec.status === 200 && Array.isArray(rec.json?.results) &&
@@ -87,30 +87,30 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   // ── L2: revise (bi-temporal), forget, validation ──
   if (createdId) {
     try {
-      const rev = await call("POST", "/amp/revise", {
+      const rev = await call("POST", "/ump/revise", {
         id: createdId, patch: { body: { text: "conformance: use the new gate" } },
       });
       add("L2.revise", "L2",
         rev.status === 200 && Array.isArray(rev.json?.supersedes) && rev.json.supersedes.includes(createdId),
         `status ${rev.status}`);
 
-      const prior = await call("GET", `/amp/memory/${encodeURIComponent(createdId)}`);
+      const prior = await call("GET", `/ump/memory/${encodeURIComponent(createdId)}`);
       add("L2.bitemporal", "L2",
         prior.json?.record?.time?.valid_to != null &&
         Array.isArray(prior.json?.record?.superseded_by) && prior.json.record.superseded_by.length > 0,
         `valid_to ${prior.json?.record?.time?.valid_to}`);
 
-      const tmp = await call("POST", "/amp/remember", {
+      const tmp = await call("POST", "/ump/remember", {
         kind: "working", body: { text: "conformance throwaway note" },
-        scope: { owner, project: "amp/conformance", visibility: "private" },
+        scope: { owner, project: "ump/conformance", visibility: "private" },
         provenance: { actor: owner, actor_kind: "user", method: "user_correction" },
       });
-      const f = await call("POST", "/amp/forget", { id: tmp.json?.id, reason: "conformance" });
+      const f = await call("POST", "/ump/forget", { id: tmp.json?.id, reason: "conformance" });
       add("L2.forget", "L2",
         f.status === 200 && (f.json?.result === "tombstoned" || f.json?.result === "erased"),
         `result ${f.json?.result}`);
 
-      const bad = await call("POST", "/amp/remember", { kind: "semantic", scope: { owner, visibility: "private" } });
+      const bad = await call("POST", "/ump/remember", { kind: "semantic", scope: { owner, visibility: "private" } });
       add("L2.validation", "L2", bad.status === 400 && bad.json?.error?.code === "invalid_record",
         `status ${bad.status}, code ${bad.json?.error?.code}`);
     } catch (e) {
@@ -120,8 +120,8 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
 
   // ── L3: signing, discovery ──
   try {
-    const wk = await call("GET", "/.well-known/amp.json");
-    add("L3.discovery", "L3", wk.status === 200 && !!wk.json?.amp && !!wk.json?.conformance,
+    const wk = await call("GET", "/.well-known/ump.json");
+    add("L3.discovery", "L3", wk.status === 200 && !!wk.json?.ump && !!wk.json?.conformance,
       `status ${wk.status}`);
   } catch (e) {
     add("L3.discovery", "L3", false, `error: ${String(e)}`);
@@ -141,5 +141,5 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   // L0 is implied if any record round-trips (it carries the portable format).
   if (level === "none" && createdRecord) level = "L1";
 
-  return { level, badge: `AMP 0.1 / ${level}`, checks };
+  return { level, badge: `UMP 0.1 / ${level}`, checks };
 }

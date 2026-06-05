@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentmemoryprotocol.org/schema/0.1/record.json",
-  "title": "AMP Memory Record",
-  "description": "Agent Memory Protocol 0.1 - the portable memory record (SPEC §2).",
+  "$id": "https://universalmemoryprotocol.org/schema/0.1/record.json",
+  "title": "UMP Memory Record",
+  "description": "Universal Memory Protocol 0.1 - the portable memory record (SPEC §2).",
   "type": "object",
-  "required": ["amp", "id", "kind", "body", "scope", "time"],
+  "required": ["ump", "id", "kind", "body", "scope", "time"],
   "additionalProperties": false,
   "properties": {
-    "amp": { "const": "0.1" },
-    "id": { "type": "string", "pattern": "^urn:amp:[a-z2-7]+$" },
+    "ump": { "const": "0.1" },
+    "id": { "type": "string", "pattern": "^urn:ump:[a-z2-7]+$" },
     "kind": {
       "enum": ["semantic", "episodic", "procedural", "working", "identity"]
     },

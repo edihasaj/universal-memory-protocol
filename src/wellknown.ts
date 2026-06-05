@@ -1,5 +1,5 @@
 /**
- * Discovery manifest (SPEC §4.3): a repo/site publishes `/.well-known/amp.json`
+ * Discovery manifest (SPEC §4.3): a repo/site publishes `/.well-known/ump.json`
  * pointing at its endpoint(s), conformance level, and any portable exports -
  * mirroring the AGENTS.md / llms.txt convention.
  */
@@ -7,7 +7,7 @@
 import type { Capabilities } from "./types.ts";
 
 export interface WellKnownManifest {
-  amp: string;
+  ump: string;
   conformance: Capabilities["conformance"];
   bindings: Capabilities["bindings"];
   kinds: Capabilities["kinds"];
@@ -15,7 +15,7 @@ export interface WellKnownManifest {
   /** Live endpoint base, if any (HTTP binding). */
   endpoint?: string;
   /** Portable export files a client can fetch without a server. */
-  exports?: Array<{ url: string; format: "amp.json" | "amp.md" | "ndjson" }>;
+  exports?: Array<{ url: string; format: "ump.json" | "ump.md" | "ndjson" }>;
   /** Owner DID, if the publisher signs records. */
   owner?: string;
 }
@@ -25,7 +25,7 @@ export function buildWellKnown(
   opts: { endpoint?: string; exports?: WellKnownManifest["exports"]; owner?: string } = {},
 ): WellKnownManifest {
   return {
-    amp: caps.amp,
+    ump: caps.ump,
     conformance: caps.conformance,
     bindings: caps.bindings,
     kinds: caps.kinds,

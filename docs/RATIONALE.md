@@ -1,6 +1,6 @@
-# AMP - Rationale & Landscape
+# UMP - Rationale & Landscape
 
-Why AMP is shaped the way it is. This captures the prior art it stands on and the
+Why UMP is shaped the way it is. This captures the prior art it stands on and the
 specific decision behind each part of the spec, so reviewers can attack the
 reasoning, not just the surface.
 
@@ -18,7 +18,7 @@ Google, Microsoft, Cloudflare) came in ~4 months - driven by SDKs, not the prose
 **MCP has no memory primitive.** The only "memory" is community *servers* - the
 reference `server-memory` is a single-device knowledge graph (entities/relations/
 observations). Memory is a tool surface bolted on, with different verbs per
-product. → **AMP's gap: the protocol middle nobody owns.**
+product. → **UMP's gap: the protocol middle nobody owns.**
 
 *Lessons copied:* minimal primitive count; ride the transport; SDKs are the
 product; capability negotiation; neutral governance. (SPEC §1, §4.1.)
@@ -56,14 +56,14 @@ product; capability negotiation; neutral governance. (SPEC §1, §4.1.)
   we are NOT "Open Memory Protocol":* the name is taken by a transcript-backup
   effort, and our problem (the live agent-memory runtime) is a different layer.
 
-**AMP's move:** PAM/MIF give the record schema for free; the arXiv paper gives the
-trust model. AMP differentiates by being the **negotiated, access-controlled
+**UMP's move:** PAM/MIF give the record schema for free; the arXiv paper gives the
+trust model. UMP differentiates by being the **negotiated, access-controlled
 runtime** with an **MCP binding** - which none of the four have. (SPEC §4.1.)
 
 ### 1.4 Adjacent standards reused (not reinvented)
 
 W3C **PROV** (provenance, §2.6), W3C **DID** (identity, §5.1), **JCS/RFC 8785**
-(canonicalization, §6.1), **AGENTS.md / llms.txt** (`.well-known/amp.json`
+(canonicalization, §6.1), **AGENTS.md / llms.txt** (`.well-known/ump.json`
 discovery convention, §4.3). Positioned beside **A2A** (coordination) and **MCP**
 (tools) as the third interop layer.
 
@@ -71,32 +71,32 @@ discovery convention, §4.3). Positioned beside **A2A** (coordination) and **MCP
 
 ## 2. What our own repos proved
 
-Three independent codebases in `~/Projects` already converged on AMP's model -
+Three independent codebases in `~/Projects` already converged on UMP's model -
 strong evidence the abstractions are real, not invented:
 
 **Recall** (`recall/`) - the reference implementation candidate. Already has:
-typed memories (rule/command/gotcha/decision/review_pattern → map to AMP kinds),
+typed memories (rule/command/gotcha/decision/review_pattern → map to UMP kinds),
 hierarchical scopes (session/path/repo/team/global), confidence-based lifecycle,
 evidence/provenance, contradiction detection, hybrid retrieval (sqlite-vec + FTS
 with a relevance floor), entity graph with N-hop walk, feedback signals
 (followed/overridden/ignored/contradicted), a maintenance/"rethinking" task queue,
-and - critically - **all three AMP bindings already exist**: MCP server, HTTP
+and - critically - **all three UMP bindings already exist**: MCP server, HTTP
 daemon, and CLAUDE.md/AGENTS.md/`.recall/context.md` file exports. Recall is ~80%
-of an L3 server; AMP is largely *naming and exposing* what it does.
+of an L3 server; UMP is largely *naming and exposing* what it does.
 
 **oktapod** (`oktapod/`) - proves the trust/governance side: provenance-tracked
 memory writes (recall_id, trace_id, policy reason, confidence), **retention
-classes** (ephemeral/default/long_term/compliance → AMP `consent.retention`),
+classes** (ephemeral/default/long_term/compliance → UMP `consent.retention`),
 policy-gated writes, semantic graph with salience. Confirms consent + provenance
 belong *in the record*.
 
 **openclaw** (`oss/openclaw/`) - proves the runtime/lifecycle side: a pluggable
 `ContextEngine` interface (bootstrap/ingest/assemble/compact/afterTurn) and
-subagent spawn/teardown hooks. Confirms AMP must define lifecycle/rehydration as
+subagent spawn/teardown hooks. Confirms UMP must define lifecycle/rehydration as
 an interface, and that the engine (retrieval, compaction) must stay swappable
 *under* the protocol (SPEC §2.4, §3.2).
 
-The mapping Recall→AMP is the single strongest argument that the spec is
+The mapping Recall→UMP is the single strongest argument that the spec is
 buildable; see ADOPTION.md §2.
 
 ---
@@ -118,11 +118,11 @@ buildable; see ADOPTION.md §2.
 
 ---
 
-## 4. Hard problems & where AMP puts them
+## 4. Hard problems & where UMP puts them
 
-| Problem | AMP's placement |
+| Problem | UMP's placement |
 |---------|-----------------|
-| Extraction / salience | **Engine-side.** AMP carries the result + provenance, not the extractor. |
+| Extraction / salience | **Engine-side.** UMP carries the result + provenance, not the extractor. |
 | Contradiction / staleness | **In spec:** bi-temporal + `supersedes` + `contradicts` relation (§2.3, §2.5). |
 | Decay / forgetting | **Hint** (`lifecycle.decay`) + `forget` op; curves engine-side. |
 | Scoping | **In spec:** composite scope + visibility (§2.2). |
@@ -141,7 +141,7 @@ intelligence (extraction, ranking, decay, consolidation) stays competitive.**
 
 1. **Adoption chicken-and-egg / fragmentation.** PAM and MIF already split the
    would-be community; incumbents have no incentive to make memory portable.
-   *Mitigation:* L0 file binding + MCP profile mean AMP works with **one** vendor
+   *Mitigation:* L0 file binding + MCP profile mean UMP works with **one** vendor
    on day one (via Recall), and adapters wrap existing stores rather than
    replacing them (ADOPTION §3).
 2. **Over-specification.** Encoding decay/salience/ranking into the wire makes it

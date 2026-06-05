@@ -1,5 +1,5 @@
 /**
- * AmpServer - the six operations (SPEC §3) over a MemoryStore.
+ * UmpServer - the six operations (SPEC §3) over a MemoryStore.
  * Binding-neutral: MCP/HTTP/file bindings all call these methods.
  */
 
@@ -18,7 +18,7 @@ import type {
   ReviseRequest,
   ReviseResponse,
 } from "./types.ts";
-import { AMP_VERSION, AmpError } from "./types.ts";
+import { UMP_VERSION, UmpError } from "./types.ts";
 import type { MemoryStore } from "./store.ts";
 import { validateDraft } from "./validate.ts";
 
@@ -30,7 +30,7 @@ export interface ChangeEvent {
 }
 export type ChangeListener = (e: ChangeEvent) => void;
 
-export interface AmpServerOptions {
+export interface UmpServerOptions {
   name: string;
   version: string;
   conformance?: ConformanceLevel;
@@ -45,13 +45,13 @@ export interface AmpServerOptions {
   onFeedback?: (req: FeedbackRequest) => void | Promise<void>;
 }
 
-export class AmpServer {
+export class UmpServer {
   private store: MemoryStore;
   private listeners = new Set<{ scope?: Partial<MemoryRecord["scope"]>; fn: ChangeListener }>();
-  private opts: Required<Omit<AmpServerOptions, "key" | "onFeedback" | "store">> &
-    Pick<AmpServerOptions, "key" | "onFeedback">;
+  private opts: Required<Omit<UmpServerOptions, "key" | "onFeedback" | "store">> &
+    Pick<UmpServerOptions, "key" | "onFeedback">;
 
-  constructor(o: AmpServerOptions) {
+  constructor(o: UmpServerOptions) {
     this.store = o.store;
     this.opts = {
       name: o.name,
@@ -67,7 +67,7 @@ export class AmpServer {
   capabilities(): Capabilities {
     return {
       server: { name: this.opts.name, version: this.opts.version },
-      amp: AMP_VERSION,
+      ump: UMP_VERSION,
       conformance: this.opts.conformance,
       kinds: ["semantic", "episodic", "procedural", "working", "identity"],
       bindings: ["mcp", "http", "file"],
@@ -84,33 +84,33 @@ export class AmpServer {
   }
 
   async recall(req: RecallRequest): Promise<RecallResponse> {
-    if (!req.query?.trim()) throw new AmpError("invalid_record", "empty query");
+    if (!req.query?.trim()) throw new UmpError("invalid_record", "empty query");
     const results = await this.store.search(req);
     return { results };
   }
 
   async get(id: string): Promise<MemoryRecord> {
     const r = await this.store.get(id);
-    if (!r) throw new AmpError("not_found", `no record ${id}`);
+    if (!r) throw new UmpError("not_found", `no record ${id}`);
     return r;
   }
 
   async remember(draft: MemoryDraft): Promise<RememberResponse> {
-    // Structural validation against AMP 0.1 (SPEC §2).
+    // Structural validation against UMP 0.1 (SPEC §2).
     const problems = validateDraft(draft);
-    if (problems.length) throw new AmpError("invalid_record", problems.join("; "));
+    if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
 
     let record = this.materialize(draft);
 
     // Consent: refuse to store non-exportable public records (policy example).
     if (record.consent?.exportable === false && record.scope.visibility === "public") {
-      throw new AmpError("consent_violation", "public record marked non-exportable");
+      throw new UmpError("consent_violation", "public record marked non-exportable");
     }
 
     // L3 signature enforcement on inbound records.
     if (this.opts.requireSignature) {
-      if (!record.integrity) throw new AmpError("signature_invalid", "missing signature");
-      if (!verify(record)) throw new AmpError("signature_invalid", "bad signature");
+      if (!record.integrity) throw new UmpError("signature_invalid", "missing signature");
+      if (!verify(record)) throw new UmpError("signature_invalid", "bad signature");
     }
 
     // Dedup → merge.
@@ -228,7 +228,7 @@ export class AmpServer {
   private materialize(draft: MemoryDraft): MemoryRecord {
     const nowIso = this.iso();
     return {
-      amp: AMP_VERSION,
+      ump: UMP_VERSION,
       id: draft.id ?? "",
       kind: draft.kind,
       body: draft.body,

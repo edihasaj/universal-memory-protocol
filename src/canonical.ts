@@ -4,7 +4,7 @@
  *
  * Rules: object keys sorted by UTF-16 code unit; no insignificant whitespace;
  * strings escaped per JSON; numbers serialized per ECMAScript Number.toString
- * (sufficient for AMP, which uses integers and simple decimals only).
+ * (sufficient for UMP, which uses integers and simple decimals only).
  */
 
 export function canonicalize(value: unknown): string {

@@ -1,14 +1,14 @@
 /**
  * File binding (SPEC §4.3, §6.3) - the "AGENTS.md of memory".
  * Portable, git-friendly, offline, no server. Two formats:
- *   - *.amp.json : array of records (or NDJSON)
- *   - *.amp.md   : Markdown body + front-matter (round-trips losslessly for L2)
+ *   - *.ump.json : array of records (or NDJSON)
+ *   - *.ump.md   : Markdown body + front-matter (round-trips losslessly for L2)
  *
  * Front-matter here uses a compact JSON block (valid YAML subset) so we avoid a
  * YAML dependency while staying human- and Obsidian-readable.
  */
 
-import { AMP_VERSION, type Consent, type MemoryRecord } from "../types.ts";
+import { UMP_VERSION, type Consent, type MemoryRecord } from "../types.ts";
 
 // ── JSON array binding ──────────────────────────────────────────────────
 
@@ -45,9 +45,9 @@ export function toMarkdown(record: MemoryRecord): string {
 
 export function fromMarkdown(text: string): MemoryRecord {
   const t = text.replace(/^﻿/, "");
-  if (!t.startsWith(FM)) throw new Error("amp.md: missing front-matter");
+  if (!t.startsWith(FM)) throw new Error("ump.md: missing front-matter");
   const end = t.indexOf(`\n${FM}`, FM.length);
-  if (end === -1) throw new Error("amp.md: unterminated front-matter");
+  if (end === -1) throw new Error("ump.md: unterminated front-matter");
   const fm = t.slice(FM.length, end).trim();
   const bodyText = t.slice(end + FM.length + 1).replace(/^\s*\n/, "").trimEnd();
   const meta = JSON.parse(fm);
@@ -85,10 +85,10 @@ function deletePath(obj: Record<string, unknown>, segs: string[]): void {
 
 function assertRecord(v: unknown): MemoryRecord {
   const r = v as MemoryRecord;
-  if (!r || typeof r !== "object") throw new Error("amp: not an object");
-  if (r.amp !== AMP_VERSION) throw new Error(`amp: version != ${AMP_VERSION}`);
+  if (!r || typeof r !== "object") throw new Error("ump: not an object");
+  if (r.ump !== UMP_VERSION) throw new Error(`ump: version != ${UMP_VERSION}`);
   if (!r.id || !r.kind || !r.body?.text || !r.scope?.owner) {
-    throw new Error("amp: missing required field (id/kind/body.text/scope.owner)");
+    throw new Error("ump: missing required field (id/kind/body.text/scope.owner)");
   }
   return r;
 }

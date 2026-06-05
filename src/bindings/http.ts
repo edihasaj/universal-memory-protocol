@@ -2,18 +2,18 @@
  * HTTP binding (SPEC §4.2). JSON over HTTP for non-MCP consumers
  * (web apps, ChatGPT actions, daemons). Dependency-free node:http.
  *
- *   GET  /amp/capabilities          GET  /.well-known/amp.json
- *   POST /amp/recall      POST /amp/remember     GET  /amp/memory/{id}
- *   POST /amp/revise      POST /amp/forget       POST /amp/feedback
- *   GET  /amp/subscribe   (Server-Sent Events stream of record changes)
+ *   GET  /ump/capabilities          GET  /.well-known/ump.json
+ *   POST /ump/recall      POST /ump/remember     GET  /ump/memory/{id}
+ *   POST /ump/revise      POST /ump/forget       POST /ump/feedback
+ *   GET  /ump/subscribe   (Server-Sent Events stream of record changes)
  *
  * Capability tokens (§5.2) are enforced when `requireCapability` is set:
  * a verb is derived per route and checked against the bearer token's grant.
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import type { AmpServer } from "../server.ts";
-import { AmpError, type MemoryScope } from "../types.ts";
+import type { UmpServer } from "../server.ts";
+import { UmpError, type MemoryScope } from "../types.ts";
 import { buildWellKnown, type WellKnownManifest } from "../wellknown.ts";
 import {
   allows,
@@ -31,14 +31,14 @@ export interface HttpBindingOptions {
 }
 
 const ROUTE_VERB: Record<string, CapabilityVerb> = {
-  "/amp/recall": "read",
-  "/amp/remember": "write",
-  "/amp/revise": "write",
-  "/amp/forget": "write",
-  "/amp/feedback": "derive",
+  "/ump/recall": "read",
+  "/ump/remember": "write",
+  "/ump/revise": "write",
+  "/ump/forget": "write",
+  "/ump/feedback": "derive",
 };
 
-export function createHttpHandler(server: AmpServer, opts: HttpBindingOptions = {}) {
+export function createHttpHandler(server: UmpServer, opts: HttpBindingOptions = {}) {
   return async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     const path = url.pathname;
@@ -51,22 +51,22 @@ export function createHttpHandler(server: AmpServer, opts: HttpBindingOptions = 
 
     try {
       // Public routes - no capability required.
-      if (method === "GET" && path === "/amp/capabilities") {
+      if (method === "GET" && path === "/ump/capabilities") {
         return send(res, 200, server.capabilities());
       }
-      if (method === "GET" && path === "/.well-known/amp.json") {
+      if (method === "GET" && path === "/.well-known/ump.json") {
         return send(res, 200, buildWellKnown(server.capabilities(), opts.wellKnown ?? {}));
       }
 
       // SSE subscribe stream.
-      if (method === "GET" && path === "/amp/subscribe") {
+      if (method === "GET" && path === "/ump/subscribe") {
         capGate(opts, "read", scopeFromQuery(url), token);
         return streamSubscribe(server, res, scopeFromQuery(url));
       }
 
-      if (method === "GET" && path.startsWith("/amp/memory/")) {
+      if (method === "GET" && path.startsWith("/ump/memory/")) {
         capGate(opts, "read", {}, token);
-        const id = decodeURIComponent(path.slice("/amp/memory/".length));
+        const id = decodeURIComponent(path.slice("/ump/memory/".length));
         return send(res, 200, { record: await server.get(id) });
       }
 
@@ -75,16 +75,16 @@ export function createHttpHandler(server: AmpServer, opts: HttpBindingOptions = 
         const verb = ROUTE_VERB[path];
         if (verb) capGate(opts, verb, bodyScope(path, body), token);
         switch (path) {
-          case "/amp/recall":   return send(res, 200, await server.recall(body));
-          case "/amp/remember": return send(res, 200, await server.remember(body.record ?? body));
-          case "/amp/revise":   return send(res, 200, await server.revise(body));
-          case "/amp/forget":   return send(res, 200, await server.forget(body));
-          case "/amp/feedback": return send(res, 200, await server.feedback(body));
+          case "/ump/recall":   return send(res, 200, await server.recall(body));
+          case "/ump/remember": return send(res, 200, await server.remember(body.record ?? body));
+          case "/ump/revise":   return send(res, 200, await server.revise(body));
+          case "/ump/forget":   return send(res, 200, await server.forget(body));
+          case "/ump/feedback": return send(res, 200, await server.feedback(body));
         }
       }
       return send(res, 404, { error: { code: "not_found", message: "no route" } });
     } catch (e) {
-      if (e instanceof AmpError) {
+      if (e instanceof UmpError) {
         const status =
           e.code === "not_found" ? 404 :
           e.code === "unauthorized" ? 401 :
@@ -96,7 +96,7 @@ export function createHttpHandler(server: AmpServer, opts: HttpBindingOptions = 
   };
 }
 
-export function createHttpServer(server: AmpServer, opts?: HttpBindingOptions) {
+export function createHttpServer(server: UmpServer, opts?: HttpBindingOptions) {
   return createServer(createHttpHandler(server, opts));
 }
 
@@ -109,17 +109,17 @@ function capGate(
   token?: string,
 ): void {
   if (!opts.requireCapability) return;
-  if (!token) throw new AmpError("unauthorized", "capability token required");
+  if (!token) throw new UmpError("unauthorized", "capability token required");
   const v = verifyCapability(token, opts.requireCapability.now?.());
-  if (!v.valid || !v.claims) throw new AmpError("unauthorized", `token ${v.reason}`);
+  if (!v.valid || !v.claims) throw new UmpError("unauthorized", `token ${v.reason}`);
   if (!allows(v.claims, verb, scope)) {
-    throw new AmpError("forbidden_scope", `token does not grant ${verb} on this scope`);
+    throw new UmpError("forbidden_scope", `token does not grant ${verb} on this scope`);
   }
 }
 
 function bodyScope(path: string, body: any): Partial<MemoryScope> {
-  if (path === "/amp/remember") return (body.record ?? body)?.scope ?? {};
-  if (path === "/amp/recall") return body?.scope ?? {};
+  if (path === "/ump/remember") return (body.record ?? body)?.scope ?? {};
+  if (path === "/ump/recall") return body?.scope ?? {};
   return {};
 }
 
@@ -134,13 +134,13 @@ function scopeFromQuery(url: URL): Partial<MemoryScope> {
 
 // ── SSE ─────────────────────────────────────────────────────────────────
 
-function streamSubscribe(server: AmpServer, res: ServerResponse, scope: Partial<MemoryScope>) {
+function streamSubscribe(server: UmpServer, res: ServerResponse, scope: Partial<MemoryScope>) {
   res.writeHead(200, {
     "content-type": "text/event-stream",
     "cache-control": "no-cache",
     connection: "keep-alive",
   });
-  res.write(": amp subscribe open\n\n");
+  res.write(": ump subscribe open\n\n");
   const unsub = server.subscribe((e) => {
     res.write(`event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`);
   }, scope);
@@ -162,7 +162,7 @@ function readJson(req: IncomingMessage): Promise<any> {
       try {
         resolve(data ? JSON.parse(data) : {});
       } catch {
-        reject(new AmpError("invalid_record", "bad json"));
+        reject(new UmpError("invalid_record", "bad json"));
       }
     });
     req.on("error", reject);

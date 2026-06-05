@@ -1,16 +1,16 @@
-# Recall → AMP adapter
+# Recall → UMP adapter
 
-Serve the **Agent Memory Protocol** over [Recall](https://github.com/edihasaj/recall)'s
+Serve the **Universal Memory Protocol** over [Recall](https://github.com/edihasaj/recall)'s
 engine. Recall keeps its native lifecycle (hybrid retrieval, repo-quality
-promotion, dedup, consolidation); AMP is the portable wire protocol on top.
+promotion, dedup, consolidation); UMP is the portable wire protocol on top.
 
 This adapter is **decoupled**: it talks to a small injected `RecallBackend`
 interface and never imports Recall's native (`sqlite-vec`) deps, so it builds and
-tests anywhere. The real `recall amp` command supplies the backend.
+tests anywhere. The real `recall ump` command supplies the backend.
 
 ## Files
 
-- `map.ts` - pure Recall ↔ AMP translation (type↔kind, status, scope/visibility,
+- `map.ts` - pure Recall ↔ UMP translation (type↔kind, status, scope/visibility,
   provenance, reversible id bridging). Fully unit-tested.
 - `store.ts` - `RecallStore implements MemoryStore`: reads map faithfully; writes
   flow into Recall's capture pipeline (text → candidate memory), which is the
@@ -18,7 +18,7 @@ tests anywhere. The real `recall amp` command supplies the backend.
 
 ## Mapping summary
 
-| AMP | Recall |
+| UMP | Recall |
 | --- | --- |
 | kind `procedural` | type `rule` / `command` / `review_pattern` |
 | kind `semantic` | type `decision` |
@@ -29,16 +29,16 @@ tests anywhere. The real `recall amp` command supplies the backend.
 | `lifecycle.status` | `active` / `candidate` / (`rejected`→`tombstoned`) |
 | `lifecycle.confidence` / `salience` | `confidence` |
 | `provenance` | `source` + `evidence` |
-| `id` `urn:amp:<base32>` | uuid (reversibly bridged) |
+| `id` `urn:ump:<base32>` | uuid (reversibly bridged) |
 
-## Wiring `recall amp` (in the Recall repo)
+## Wiring `recall ump` (in the Recall repo)
 
-Add `@amp/core` as a dependency, then mount the adapter over Recall's existing
+Add `@ump/core` as a dependency, then mount the adapter over Recall's existing
 modules. The backend is ~30 lines bridging Recall's functions:
 
 ```ts
-import { AmpServer, generateKeyPair, createMcpServer, createHttpServer } from "@amp/core";
-import { RecallStore, type RecallBackend } from "@amp/core/adapters/recall/store";
+import { UmpServer, generateKeyPair, createMcpServer, createHttpServer } from "@ump/core";
+import { RecallStore, type RecallBackend } from "@ump/core/adapters/recall/store";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Recall's own modules:
@@ -58,22 +58,22 @@ const backend: RecallBackend = {
     return ctx.memories.map((m) => ({ memory: m, score: m.score ?? m.confidence }));
   },
   capture: async ({ text, repo }) =>
-    processCorrection(db, text, { repo, sessionId: "amp", source: "amp_remember" }),
+    processCorrection(db, text, { repo, sessionId: "ump", source: "amp_remember" }),
 };
 
-const amp = new AmpServer({
+const ump = new UmpServer({
   name: "recall", version: RECALL_VERSION, conformance: "L3",
   store: new RecallStore(backend, { owner: { did: owner } as any }),
   key: operatorKeyPair,                            // sign on write (L3)
 });
 
 // expose over MCP (primary) and/or HTTP
-if (process.env.AMP_HTTP) createHttpServer(amp, { wellKnown: { owner } }).listen(Number(process.env.AMP_HTTP));
-await createMcpServer(amp).connect(new StdioServerTransport());
+if (process.env.UMP_HTTP) createHttpServer(ump, { wellKnown: { owner } }).listen(Number(process.env.UMP_HTTP));
+await createMcpServer(ump).connect(new StdioServerTransport());
 ```
 
-That makes Recall a conforming **L3** AMP server - the production-grade
-implementation alongside `@amp/core`'s minimal reference. `feedback` maps to
+That makes Recall a conforming **L3** UMP server - the production-grade
+implementation alongside `@ump/core`'s minimal reference. `feedback` maps to
 Recall's `feedback`/`signal_outcome`; `revise`/`forget` map to Recall's
 supersession and `prune`/`reject`.
 

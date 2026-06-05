@@ -7,7 +7,7 @@ issues for security reports. Expect an acknowledgement within a few days.
 
 ## Threat model notes
 
-AMP treats stored memory as **attacker-controllable input**. Implementers must
+UMP treats stored memory as **attacker-controllable input**. Implementers must
 follow the injection-resistant rehydration requirements (SPEC Section 5.3):
 recalled records are verified, filtered by scope and consent, and structurally
 framed as untrusted data; instructions found inside a memory body are never

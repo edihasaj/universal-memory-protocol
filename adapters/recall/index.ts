@@ -1,4 +1,4 @@
-/** Recall -> AMP adapter: serve AMP over Recall's engine. See ./README.md. */
+/** Recall -> UMP adapter: serve UMP over Recall's engine. See ./README.md. */
 
 export {
   RecallStore,

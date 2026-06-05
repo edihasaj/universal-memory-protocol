@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { AddressInfo } from "node:net";
 import {
-  AmpServer,
+  UmpServer,
   InMemoryStore,
   generateKeyPair,
   mintCapability,
@@ -16,8 +16,8 @@ const OWNER = generateKeyPair(new Uint8Array(32).fill(11));
 const fixed = () => new Date("2026-06-04T10:00:00Z");
 
 function server(opts: { sign?: boolean } = {}) {
-  return new AmpServer({
-    name: "amp-ref", version: "0.1.0", store: new InMemoryStore(),
+  return new UmpServer({
+    name: "ump-ref", version: "0.1.0", store: new InMemoryStore(),
     now: fixed, key: opts.sign ? OWNER : undefined,
   });
 }
@@ -83,11 +83,11 @@ describe("HTTP capability enforcement", () => {
     const base = await listen(http);
     try {
       const body = JSON.stringify({ query: "x", scope: { owner: OWNER.did } });
-      const noTok = await fetch(`${base}/amp/recall`, { method: "POST", headers: { "content-type": "application/json" }, body });
+      const noTok = await fetch(`${base}/ump/recall`, { method: "POST", headers: { "content-type": "application/json" }, body });
       expect(noTok.status).toBe(401);
 
       const tok = mintCapability(OWNER, { verbs: ["read"], scope: { owner: OWNER.did }, exp: "2999-01-01T00:00:00Z", jti: "h" });
-      const withTok = await fetch(`${base}/amp/recall`, {
+      const withTok = await fetch(`${base}/ump/recall`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${tok}` },
         body,
@@ -109,7 +109,7 @@ describe("conformance runner (SPEC §7)", () => {
       const failed = report.checks.filter((c) => !c.ok);
       expect(failed, JSON.stringify(failed, null, 2)).toEqual([]);
       expect(report.level).toBe("L3");
-      expect(report.badge).toBe("AMP 0.1 / L3");
+      expect(report.badge).toBe("UMP 0.1 / L3");
     } finally {
       http.close();
     }

@@ -1,4 +1,4 @@
-/** Agent Memory Protocol - reference SDK (AMP 0.1). */
+/** Universal Memory Protocol - reference SDK (UMP 0.1). */
 
 export * from "./types.ts";
 export { canonicalize } from "./canonical.ts";
@@ -14,8 +14,8 @@ export {
 export { randomId, contentId, isAmpId } from "./id.ts";
 export { InMemoryStore, type MemoryStore } from "./store.ts";
 export {
-  AmpServer,
-  type AmpServerOptions,
+  UmpServer,
+  type UmpServerOptions,
   type ChangeEvent,
   type ChangeListener,
 } from "./server.ts";

@@ -1,6 +1,6 @@
-# Contributing to AMP
+# Contributing to UMP
 
-Agent Memory Protocol is an open standard. Contributions to the spec, the
+Universal Memory Protocol is an open standard. Contributions to the spec, the
 reference SDK, adapters, and the conformance suite are welcome.
 
 ## Ground rules

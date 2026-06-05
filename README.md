@@ -1,6 +1,6 @@
-# Agent Memory Protocol (AMP)
+# Universal Memory Protocol (UMP)
 
-> The portable memory layer for AI agents. What MCP did for tools, AMP does for memory.
+> The portable memory layer for AI agents. What MCP did for tools, UMP does for memory.
 
 **Status:** Draft v0.1 (design proposal) · **Reference implementation:** [Recall](https://github.com/edihasaj/recall)
 
@@ -11,7 +11,7 @@
 Every agent harness - Claude Code, Codex, ChatGPT, and the open-source long tail
 (openclaw, oktapod, LangGraph, Letta…) - is reinventing memory in a private,
 non-portable way. Your corrections, preferences, and project knowledge are
-trapped inside whichever tool learned them. **AMP is an open standard for how
+trapped inside whichever tool learned them. **UMP is an open standard for how
 agents read, write, and exchange memory** - a small set of negotiated operations
 over a portable, signed, bi-temporal record format. Any harness can speak it; any
 store can serve it; the user owns and can export the result.
@@ -33,12 +33,12 @@ Three things are true in 2026:
    supersession-over-deletion, consolidation. The hard design work is *done* - it
    just isn't *standardized*.
 
-So AMP does **not** invent a new wire protocol. The lesson of MCP is *minimal
-primitives + ride existing rails + great SDKs + neutral governance*. AMP is:
+So UMP does **not** invent a new wire protocol. The lesson of MCP is *minimal
+primitives + ride existing rails + great SDKs + neutral governance*. UMP is:
 
 ```
   ┌─────────────────────────────────────────────────────────┐
-  │  AMP = Portable Record Format  +  6 operations  +        │
+  │  UMP = Portable Record Format  +  6 operations  +        │
   │        3 bindings (MCP profile / HTTP / file export)     │
   └─────────────────────────────────────────────────────────┘
 ```
@@ -47,15 +47,15 @@ It rides MCP's transport (so Claude/Codex/any MCP client speaks it with zero new
 infra), reuses W3C PROV + DID + the PAM/MIF schema for the record, and adds the
 one thing nobody owns: **the negotiated, access-controlled runtime in the middle.**
 
-## Where AMP sits
+## Where UMP sits
 
 | Layer        | Standard | What it carries            |
 |--------------|----------|----------------------------|
 | Tools        | **MCP**  | callable functions, resources |
 | Coordination | **A2A**  | agent-to-agent invocation  |
-| **Memory**   | **AMP**  | **portable knowledge across sessions, agents, and vendors** |
+| **Memory**   | **UMP**  | **portable knowledge across sessions, agents, and vendors** |
 
-AMP sits *beside* MCP and A2A, not on top. It is the third leg.
+UMP sits *beside* MCP and A2A, not on top. It is the third leg.
 
 ## The six operations
 
@@ -75,12 +75,12 @@ That's the whole surface. A conforming client is ~100 lines.
 
 ## Conformance levels (adopt incrementally)
 
-- **L0 - Portable Record:** read/write the `*.amp.json` / `*.amp.md` file format. No server.
+- **L0 - Portable Record:** read/write the `*.ump.json` / `*.ump.md` file format. No server.
 - **L1 - Core:** `capabilities` + `recall` + `remember` + `get`.
 - **L2 - Standard:** adds `revise` + `forget`, bi-temporal validity, provenance, scope + consent.
 - **L3 - Full:** adds `feedback` + `subscribe`, signed integrity, capability-scoped tokens, contradiction relations.
 
-A repo can ship a `.amp/` export (L0) the same day; a harness can wire the MCP
+A repo can ship a `.ump/` export (L0) the same day; a harness can wire the MCP
 profile (L1) in an afternoon.
 
 ## Repo layout
@@ -88,10 +88,10 @@ profile (L1) in an afternoon.
 - **[SPEC.md](./SPEC.md)** - the draft standard: record schema, operations, bindings, conformance, trust.
 - **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
 - **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: Recall as reference impl, adapters, governance, the path to Anthropic/OpenAI.
-- **`src/`** - `@amp/core`, the reference SDK + L3 server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
-- **`adapters/recall/`** - serve AMP over [Recall](https://github.com/edihasaj/recall)'s engine.
+- **`src/`** - `@ump/core`, the reference SDK + L3 server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
+- **`adapters/recall/`** - serve UMP over [Recall](https://github.com/edihasaj/recall)'s engine.
 - **`examples/round-trip.ts`** - write, recall, export, import across "vendors", signature intact.
-- **docs site** - lives in a separate repo (`agent-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
+- **docs site** - lives in a separate repo (`universal-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
 
 ## Run it
 
@@ -101,20 +101,20 @@ pnpm typecheck                                          # tsc --noEmit
 pnpm test                                               # conformance + binding tests
 pnpm build                                              # tsup -> dist (esm + d.ts + bins)
 node --experimental-strip-types examples/round-trip.ts  # the cross-vendor demo
-AMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
+UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
 pnpm conformance http://localhost:4000                  # self-certify L0-L3
 ```
 
 ## Name & domains
 
-Canonical name **Agent Memory Protocol (AMP)**; the third interop layer beside
+Canonical name **Universal Memory Protocol (UMP)**; the third interop layer beside
 *Model Context Protocol* and *Agent2Agent*. Primary domain
-**agentmemoryprotocol.io** (`.org`/`.dev`/`.ai` available to reserve). The name
+**universalmemoryprotocol.io** (`.org`/`.dev`/`.ai` available to reserve). The name
 "Open Memory Protocol" is intentionally avoided - it belongs to a separate
 conversation-transcript-backup project (see [docs/RATIONALE.md](./docs/RATIONALE.md)).
 
 ## License
 
-Code (`@amp/core`, adapters, examples): **Apache-2.0** (see [LICENSE](./LICENSE)).
+Code (`@ump/core`, adapters, examples): **Apache-2.0** (see [LICENSE](./LICENSE)).
 Spec prose (`SPEC.md`): **CC-BY-4.0** (proposed). Neutral stewardship intended;
 see [docs/ADOPTION.md](./docs/ADOPTION.md).

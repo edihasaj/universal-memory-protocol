@@ -1,10 +1,10 @@
 /**
- * Recall ↔ AMP mapping (pure functions).
+ * Recall ↔ UMP mapping (pure functions).
  *
  * Recall is the reference *engine* (hybrid retrieval, repo-quality promotion,
- * consolidation); AMP is the portable *protocol*. These functions translate
- * Recall's native memory rows into AMP records and back, so a `recall amp`
- * command can serve AMP over Recall's existing store. See ./README.md.
+ * consolidation); UMP is the portable *protocol*. These functions translate
+ * Recall's native memory rows into UMP records and back, so a `recall ump`
+ * command can serve UMP over Recall's existing store. See ./README.md.
  */
 
 import { base32nopad } from "@scure/base";
@@ -48,7 +48,7 @@ const TYPE_TO_KIND: Record<RecallType, MemoryKind> = {
   review_pattern: "procedural",
 };
 
-// AMP kind → best-fit Recall type for the capture path.
+// UMP kind → best-fit Recall type for the capture path.
 const KIND_TO_TYPE: Record<MemoryKind, RecallType> = {
   procedural: "rule",
   semantic: "decision",
@@ -72,13 +72,13 @@ export function kindToRecallType(k: MemoryKind): RecallType {
   return KIND_TO_TYPE[k] ?? "decision";
 }
 
-/** Map a Recall memory row → an AMP Memory Record. */
+/** Map a Recall memory row → an UMP Memory Record. */
 export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryRecord {
   const status: MemoryStatus =
     m.status === "active" ? "active" : m.status === "rejected" ? "tombstoned" : "candidate";
   const created = m.created_at ?? new Date(0).toISOString();
   return {
-    amp: "0.1",
+    ump: "0.1",
     id: toAmpId(m.id),
     kind: recallTypeToKind(m.type),
     body: { text: m.text },
@@ -109,7 +109,7 @@ export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryReco
   };
 }
 
-/** Map an AMP draft (from `remember`) → Recall capture input. */
+/** Map an UMP draft (from `remember`) → Recall capture input. */
 export function recordToRecallCapture(d: MemoryDraft): {
   text: string;
   type: RecallType;
@@ -125,16 +125,16 @@ export function recordToRecallCapture(d: MemoryDraft): {
 }
 
 // ── id bridging ─────────────────────────────────────────────────────────
-// Recall ids are uuids; AMP ids are `urn:amp:<base32>`. We namespace Recall
+// Recall ids are uuids; UMP ids are `urn:ump:<base32>`. We namespace Recall
 // ids so they round-trip without collision.
 
 export function toAmpId(recallId: string): string {
-  if (/^urn:amp:/.test(recallId)) return recallId;
-  return "urn:amp:" + base32(recallId);
+  if (/^urn:ump:/.test(recallId)) return recallId;
+  return "urn:ump:" + base32(recallId);
 }
 
 export function fromAmpId(ampId: string): string {
-  const m = /^urn:amp:(.+)$/.exec(ampId);
+  const m = /^urn:ump:(.+)$/.exec(ampId);
   return m ? unbase32(m[1]!) : ampId;
 }
 
@@ -150,8 +150,8 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-// lowercase base32 (a-z2-7) of a utf-8 string - matches urn:amp:<base32>,
-// stable and reversible so Recall uuids round-trip through AMP ids.
+// lowercase base32 (a-z2-7) of a utf-8 string - matches urn:ump:<base32>,
+// stable and reversible so Recall uuids round-trip through UMP ids.
 function base32(s: string): string {
   return base32nopad.encode(new TextEncoder().encode(s)).toLowerCase();
 }

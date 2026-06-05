@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AMP conformance CLI. Probes an endpoint and prints its conformance level.
+ * UMP conformance CLI. Probes an endpoint and prints its conformance level.
  *
  *   node --experimental-strip-types src/bin/conformance.ts [baseUrl] [--token <cap>]
  *   # default baseUrl: http://localhost:4000
