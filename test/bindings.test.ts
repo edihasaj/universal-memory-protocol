@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   UmpServer,
   InMemoryStore,
+  JsonFileStore,
   createMcpServer,
   createHttpHandler,
 } from "../src/index.ts";
@@ -43,6 +47,35 @@ describe("HTTP binding (SPEC §4.2)", () => {
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(404);
     expect(JSON.parse(body()).error.code).toBe("not_found");
+  });
+});
+
+describe("JsonFileStore", () => {
+  it("persists records as portable UMP JSON", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "ump-store-"));
+    try {
+      const path = join(dir, "memories.ump.json");
+      const first = new UmpServer({
+        name: "t",
+        version: "0",
+        store: await JsonFileStore.open(path),
+        now: () => new Date("2026-06-04T10:00:00Z"),
+      });
+      const { id } = await first.remember({
+        kind: "semantic",
+        body: { text: "persist package manager preference" },
+        scope: { owner: "did:key:zOwner", project: "p", visibility: "private" },
+      });
+
+      const second = new UmpServer({
+        name: "t",
+        version: "0",
+        store: await JsonFileStore.open(path),
+      });
+      expect((await second.get(id)).body.text).toContain("persist package manager");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 

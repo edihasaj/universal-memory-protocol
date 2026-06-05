@@ -13,6 +13,7 @@ export {
 } from "./integrity.ts";
 export { randomId, contentId, isUmpId, isAmpId } from "./id.ts";
 export { InMemoryStore, type MemoryStore } from "./store.ts";
+export { JsonFileStore } from "./stores/file.ts";
 export {
   UmpServer,
   type UmpServerOptions,

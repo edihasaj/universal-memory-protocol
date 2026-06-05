@@ -89,6 +89,7 @@ profile (L1) in an afternoon.
 - **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
 - **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: Recall as reference impl, adapters, governance, the path to Anthropic/OpenAI.
 - **`src/`** - `@ump/core`, the reference SDK + minimal server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
+- **`JsonFileStore`** - dependency-free persistent store that writes portable `*.ump.json` while keeping retrieval hot in memory.
 - **`adapters/recall/`** - serve UMP over [Recall](https://github.com/edihasaj/recall)'s engine.
 - **`examples/round-trip.ts`** - write, recall, export, import across "vendors", signature intact.
 - **docs site** - lives in a separate repo (`universal-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
