@@ -107,20 +107,34 @@ for common adoption paths:
 
 | Store | Use case |
 | --- | --- |
+| **`JsonFileStore`** | **Default.** Portable, signed `memory.ump.json`; fast and faithful. |
 | `InMemoryStore` | Tests, examples, and ephemeral servers. |
-| `JsonFileStore` | Local persistent `memory.ump.json` records. |
 | `MarkdownDirectoryStore` | Human-editable `*.ump.md` records. |
 | `PostgresStore` | Postgres-compatible clients. |
 | `SqliteStore` | SQLite-compatible clients. |
 | `RedisStore` | Redis hash persistence. |
-| `VectorStore` | Generic vector-backed store wrapper. |
-| `QdrantStore` | Qdrant-style vector clients. |
-| `PineconeStore` | Pinecone-style vector clients. |
-| `WeaviateStore` | Weaviate-style vector clients. |
-| `RecallStore` | Adapter for a Recall-backed memory engine. |
+| `VectorStore` | Generic vector-backed store (e.g. sqlite-vec) + embedding fn. |
+| `QdrantStore` / `PineconeStore` / `WeaviateStore` | Hosted vector clients. |
+| `RecallStore` | Opt-in adapter for a Recall-backed memory engine. |
 
 Vendor database SDKs stay outside `@ump/core`, so installing the protocol package
 does not force native builds or cloud clients into every project.
+
+### Choosing a backend
+
+- **Default (zero-config, local):** `JsonFileStore`. In benchmarks it is the
+  fastest and most faithful baseline (all 5 kinds preserved, flat ~5ms recall at
+  3k records, portable signed file). This is what `ump-memory` uses by default.
+- **Semantic retrieval at scale:** a **vector store** (`VectorStore` over
+  sqlite-vec / Qdrant / Pinecone / Weaviate) **with embeddings enabled**, or
+  `RecallStore`. These earn their extra latency only when embeddings are actually
+  populated; without them you get lexical recall at higher cost than the file store.
+- **Recall as engine (`RecallStore`):** opt-in. Reads map faithfully and writes
+  are direct + fast; enable Recall's embedding/consolidation layer to get its
+  smarter retrieval. Without it, prefer `JsonFileStore`.
+
+Switching is one line: point `UmpServer` at a different `MemoryStore`. The record
+format, bindings, and protocol are identical across all of them.
 
 ## Existing Memory Imports
 

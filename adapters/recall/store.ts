@@ -15,6 +15,7 @@ import type {
   RecallRequest,
   RecallResult,
 } from "../../src/types.ts";
+import type { MemoryKind } from "../../src/types.ts";
 import {
   fromUmpId,
   toUmpId,
@@ -43,7 +44,11 @@ export interface RecallBackend {
     scope: RecallScope;
     repo?: string;
     confidence: number;
+    /** Original UMP kind, preserved in capture-context for round-trip fidelity. */
+    kind: MemoryKind;
   }): Promise<string>;
+  /** Tombstone an existing memory (forget / supersede); returns true if found. */
+  tombstone(id: string): Promise<boolean> | boolean;
   /** Optional: Recall's capture/judgement path (processCorrection). */
   capture?(input: {
     text: string;
@@ -101,14 +106,33 @@ export class RecallStore implements MemoryStore {
       await this.backend.capture(recordToRecallCapture(record));
       return; // capture owns id assignment / judgement; keep the record's id
     }
+
+    // Update path: if the record's id already maps to a Recall memory, this is a
+    // lifecycle edit (forget tombstone, or the closed prior of a revise) rather
+    // than a new write. Tombstone it instead of inserting a duplicate.
+    const existingId = this.recallIdFor(record.id);
+    if (existingId && (await this.backend.getMemory(existingId))) {
+      const superseded = (record.superseded_by?.length ?? 0) > 0;
+      if (record.lifecycle?.status === "tombstoned" || superseded) {
+        await this.backend.tombstone(existingId);
+      }
+      return record.id; // keep the same id; reads now reflect the new status
+    }
+
     const id = await this.backend.storeDirect({
       text: record.body.text,
       type: kindToRecallType(record.kind),
       scope: record.scope.project ? "repo" : "global",
       repo: record.scope.project,
       confidence: record.lifecycle?.confidence ?? 0.8,
+      kind: record.kind,
     });
     return toUmpId(id);
+  }
+
+  private recallIdFor(umpId: string): string | undefined {
+    if (!/^urn:ump:/.test(umpId)) return undefined;
+    try { return fromUmpId(umpId); } catch { return undefined; }
   }
 
   /** Recall performs its own dedup; let the engine handle it. */

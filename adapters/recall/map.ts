@@ -37,6 +37,8 @@ export interface RecallMemory {
   updated_at?: string;
   last_validated_at?: string | null;
   evidence?: Array<{ ref?: string; context?: string }>;
+  /** Recall capture-context; carries the original UMP kind to preserve fidelity. */
+  capture_context?: { ump_kind?: string } | null;
 }
 
 const TYPE_TO_KIND: Record<RecallType, MemoryKind> = {
@@ -72,7 +74,9 @@ export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryReco
   return {
     ump: "0.1",
     id: toUmpId(m.id),
-    kind: recallTypeToKind(m.type),
+    // Prefer the original UMP kind (preserved in capture-context); fall back to
+    // mapping Recall's native type when it was not written through UMP.
+    kind: (m.capture_context?.ump_kind as MemoryRecord["kind"]) ?? recallTypeToKind(m.type),
     body: { text: m.text },
     scope: {
       owner,

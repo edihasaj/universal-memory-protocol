@@ -46,12 +46,19 @@ function backend(): RecallBackend {
     getMemory: (id) => localRows.find((r) => r.id === id),
     compileHybrid: async ({ query }) =>
       localRows
+        .filter((r) => r.status !== "rejected") // recall excludes rejected from retrieval
         .filter((r) => query.split(" ").some((w) => r.text.toLowerCase().includes(w.toLowerCase())))
         .map((memory) => ({ memory, score: 0.9 })),
-    storeDirect: async ({ text, type, scope, repo, confidence }) => {
+    storeDirect: async ({ text, type, scope, repo, confidence, kind }) => {
       const id = `created-${++storeSeq}-aaaa-bbbb-cccc-dddddddddddd`;
-      localRows.push({ id, text, type, scope, status: "active", confidence, repo: repo ?? null });
+      localRows.push({ id, text, type, scope, status: "active", confidence, repo: repo ?? null, capture_context: { ump_kind: kind } });
       return id;
+    },
+    tombstone: (id) => {
+      const m = localRows.find((r) => r.id === id);
+      if (!m) return false;
+      m.status = "rejected";
+      return true;
     },
     capture: async ({ text }) => {
       captured.push({ text });
@@ -122,6 +129,31 @@ describe("RecallStore under UmpServer", () => {
     const got = await server.get(r.id);
     expect(got.body.text).toBe("never deploy on fridays");
     expect(got.kind).toBe("procedural");
+  });
+
+  it("preserves all five UMP kinds across write -> get (via capture-context)", async () => {
+    const server = new UmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(backend(), { owner: OWNER }) });
+    for (const kind of ["semantic", "episodic", "procedural", "working", "identity"] as const) {
+      const w = await server.remember({
+        kind, body: { text: `fidelity ${kind}` },
+        scope: { owner: OWNER, project: "p", visibility: "private" },
+        provenance: { actor: OWNER, actor_kind: "user", method: "user_correction" },
+      });
+      const got = await server.get(w.id);
+      expect(got.kind, `kind ${kind} should round-trip`).toBe(kind);
+    }
+  });
+
+  it("forget tombstones so the memory drops out of recall", async () => {
+    const server = new UmpServer({ name: "recall", version: "1.0.0", store: new RecallStore(backend(), { owner: OWNER }) });
+    const w = await server.remember({
+      kind: "working", body: { text: "scratch note qqzzx" },
+      scope: { owner: OWNER, project: "p", visibility: "private" },
+      provenance: { actor: OWNER, actor_kind: "user", method: "user_correction" },
+    });
+    await server.forget({ id: w.id, reason: "test" });
+    const res = await server.recall({ query: "qqzzx scratch", scope: { owner: OWNER, project: "p" } });
+    expect(res.results.some((r) => r.record.body.text.includes("qqzzx"))).toBe(false);
   });
 
   it("smart mode routes writes through the capture pipeline", async () => {
