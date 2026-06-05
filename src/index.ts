@@ -11,7 +11,7 @@ export {
   verify,
   type KeyPair,
 } from "./integrity.ts";
-export { randomId, contentId, isAmpId } from "./id.ts";
+export { randomId, contentId, isUmpId, isAmpId } from "./id.ts";
 export { InMemoryStore, type MemoryStore } from "./store.ts";
 export {
   UmpServer,

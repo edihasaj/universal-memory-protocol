@@ -98,6 +98,39 @@ describe("HTTP capability enforcement", () => {
       http.close();
     }
   });
+
+  it("authorizes id-based reads against the stored record scope", async () => {
+    const s = server();
+    const p1 = await s.remember({
+      kind: "semantic",
+      body: { text: "project one memory" },
+      scope: { owner: OWNER.did, project: "p1", visibility: "private" },
+      provenance: { actor: OWNER.did, actor_kind: "user", method: "m" },
+    });
+    const p2 = await s.remember({
+      kind: "semantic",
+      body: { text: "project two memory" },
+      scope: { owner: OWNER.did, project: "p2", visibility: "private" },
+      provenance: { actor: OWNER.did, actor_kind: "user", method: "m" },
+    });
+    const http = createHttpServer(s, { requireCapability: { now: fixed } });
+    const base = await listen(http);
+    try {
+      const tok = mintCapability(OWNER, {
+        verbs: ["read"],
+        scope: { owner: OWNER.did, project: "p1" },
+        exp: "2999-01-01T00:00:00Z",
+        jti: "get-scope",
+      });
+      const headers = { authorization: `Bearer ${tok}` };
+      const allowed = await fetch(`${base}/ump/memory/${encodeURIComponent(p1.id)}`, { headers });
+      const denied = await fetch(`${base}/ump/memory/${encodeURIComponent(p2.id)}`, { headers });
+      expect(allowed.status).toBe(200);
+      expect(denied.status).toBe(403);
+    } finally {
+      http.close();
+    }
+  });
 });
 
 describe("conformance runner (SPEC §7)", () => {

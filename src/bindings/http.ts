@@ -18,6 +18,7 @@ import { buildWellKnown, type WellKnownManifest } from "../wellknown.ts";
 import {
   allows,
   verifyCapability,
+  type CapabilityClaims,
   type CapabilityVerb,
 } from "../capability.ts";
 
@@ -29,14 +30,6 @@ export interface HttpBindingOptions {
   /** Extra fields for the discovery manifest. */
   wellKnown?: { endpoint?: string; exports?: WellKnownManifest["exports"]; owner?: string };
 }
-
-const ROUTE_VERB: Record<string, CapabilityVerb> = {
-  "/ump/recall": "read",
-  "/ump/remember": "write",
-  "/ump/revise": "write",
-  "/ump/forget": "write",
-  "/ump/feedback": "derive",
-};
 
 export function createHttpHandler(server: UmpServer, opts: HttpBindingOptions = {}) {
   return async (req: IncomingMessage, res: ServerResponse) => {
@@ -65,21 +58,36 @@ export function createHttpHandler(server: UmpServer, opts: HttpBindingOptions = 
       }
 
       if (method === "GET" && path.startsWith("/ump/memory/")) {
-        capGate(opts, "read", {}, token);
         const id = decodeURIComponent(path.slice("/ump/memory/".length));
-        return send(res, 200, { record: await server.get(id) });
+        const record = await server.get(id);
+        const claims = capGate(opts, "read", record.scope, token);
+        return send(res, 200, { record: await server.get(id, claims?.scope) });
       }
 
       if (method === "POST") {
         const body = await readJson(req);
-        const verb = ROUTE_VERB[path];
-        if (verb) capGate(opts, verb, bodyScope(path, body), token);
         switch (path) {
-          case "/ump/recall":   return send(res, 200, await server.recall(body));
-          case "/ump/remember": return send(res, 200, await server.remember(body.record ?? body));
-          case "/ump/revise":   return send(res, 200, await server.revise(body));
-          case "/ump/forget":   return send(res, 200, await server.forget(body));
-          case "/ump/feedback": return send(res, 200, await server.feedback(body));
+          case "/ump/recall":
+            capGate(opts, "read", body.scope ?? {}, token);
+            return send(res, 200, await server.recall(body));
+          case "/ump/remember":
+            capGate(opts, "write", (body.record ?? body)?.scope ?? {}, token);
+            return send(res, 200, await server.remember(body.record ?? body));
+          case "/ump/revise": {
+            const record = await server.get(body.id);
+            capGate(opts, "write", record.scope, token);
+            return send(res, 200, await server.revise(body));
+          }
+          case "/ump/forget": {
+            const record = await server.get(body.id);
+            capGate(opts, "write", record.scope, token);
+            return send(res, 200, await server.forget(body));
+          }
+          case "/ump/feedback": {
+            const record = await server.get(body.id);
+            capGate(opts, "derive", record.scope, token);
+            return send(res, 200, await server.feedback(body));
+          }
         }
       }
       return send(res, 404, { error: { code: "not_found", message: "no route" } });
@@ -107,20 +115,15 @@ function capGate(
   verb: CapabilityVerb,
   scope: Partial<MemoryScope>,
   token?: string,
-): void {
-  if (!opts.requireCapability) return;
+): CapabilityClaims | undefined {
+  if (!opts.requireCapability) return undefined;
   if (!token) throw new UmpError("unauthorized", "capability token required");
   const v = verifyCapability(token, opts.requireCapability.now?.());
   if (!v.valid || !v.claims) throw new UmpError("unauthorized", `token ${v.reason}`);
   if (!allows(v.claims, verb, scope)) {
     throw new UmpError("forbidden_scope", `token does not grant ${verb} on this scope`);
   }
-}
-
-function bodyScope(path: string, body: any): Partial<MemoryScope> {
-  if (path === "/ump/remember") return (body.record ?? body)?.scope ?? {};
-  if (path === "/ump/recall") return body?.scope ?? {};
-  return {};
+  return v.claims;
 }
 
 function scopeFromQuery(url: URL): Partial<MemoryScope> {

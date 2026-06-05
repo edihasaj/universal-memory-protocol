@@ -5,7 +5,7 @@
  * time, signed by the OWNER's DID - least-privilege multi-agent sharing with no
  * central auth server. Verbs: read | write | derive | export.
  *
- * Wire form: "ampcap.<base64url(claims)>.<ed25519:base64url(sig)>"
+ * Wire form: "umpcap.<base64url(claims)>.<ed25519:base64url(sig)>"
  */
 
 import { blake3 } from "@noble/hashes/blake3";
@@ -33,7 +33,7 @@ export interface CapabilityClaims {
   jti: string;
 }
 
-const PREFIX = "ampcap";
+const PREFIX = "umpcap";
 
 export function mintCapability(
   key: KeyPair,

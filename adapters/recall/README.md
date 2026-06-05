@@ -58,7 +58,7 @@ const backend: RecallBackend = {
     return ctx.memories.map((m) => ({ memory: m, score: m.score ?? m.confidence }));
   },
   capture: async ({ text, repo }) =>
-    processCorrection(db, text, { repo, sessionId: "ump", source: "amp_remember" }),
+    processCorrection(db, text, { repo, sessionId: "ump", source: "ump_remember" }),
 };
 
 const ump = new UmpServer({

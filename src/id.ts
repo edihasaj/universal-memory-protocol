@@ -18,6 +18,9 @@ export function contentId(record: MemoryRecord): string {
   return "urn:ump:" + hash.slice(hash.indexOf(":") + 1);
 }
 
-export function isAmpId(value: string): boolean {
+export function isUmpId(value: string): boolean {
   return /^urn:ump:[a-z2-7]+$/.test(value);
 }
+
+/** @deprecated use isUmpId */
+export const isAmpId = isUmpId;

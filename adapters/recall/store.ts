@@ -15,7 +15,7 @@ import type {
   RecallResult,
 } from "../../src/types.ts";
 import {
-  fromAmpId,
+  fromUmpId,
   recallMemoryToRecord,
   recordToRecallCapture,
   type RecallMemory,
@@ -47,7 +47,7 @@ export class RecallStore implements MemoryStore {
   ) {}
 
   async get(id: string): Promise<MemoryRecord | undefined> {
-    const m = await this.backend.getMemory(fromAmpId(id));
+    const m = await this.backend.getMemory(fromUmpId(id));
     return m ? recallMemoryToRecord(m, this.opts.owner) : undefined;
   }
 

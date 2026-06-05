@@ -13,7 +13,6 @@ import type {
   MemoryDraft,
   MemoryKind,
   MemoryRecord,
-  MemoryStatus,
 } from "../../src/types.ts";
 
 // Recall's native shapes, modeled locally so this adapter does not import
@@ -57,13 +56,6 @@ const KIND_TO_TYPE: Record<MemoryKind, RecallType> = {
   identity: "decision",
 };
 
-const STATUS_TO_AMP: Record<RecallStatus, MemoryStatus | "rejected"> = {
-  transient: "candidate",
-  candidate: "candidate",
-  active: "active",
-  rejected: "tombstoned",
-};
-
 export function recallTypeToKind(t: RecallType): MemoryKind {
   return TYPE_TO_KIND[t] ?? "semantic";
 }
@@ -74,12 +66,12 @@ export function kindToRecallType(k: MemoryKind): RecallType {
 
 /** Map a Recall memory row → an UMP Memory Record. */
 export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryRecord {
-  const status: MemoryStatus =
+  const status =
     m.status === "active" ? "active" : m.status === "rejected" ? "tombstoned" : "candidate";
   const created = m.created_at ?? new Date(0).toISOString();
   return {
     ump: "0.1",
-    id: toAmpId(m.id),
+    id: toUmpId(m.id),
     kind: recallTypeToKind(m.type),
     body: { text: m.text },
     scope: {
@@ -99,7 +91,7 @@ export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryReco
       salience: clamp01(m.confidence),
       status: status === "candidate" ? "candidate" : status,
     },
-    supersedes: m.supersedes ? [toAmpId(m.supersedes)] : undefined,
+    supersedes: m.supersedes ? [toUmpId(m.supersedes)] : undefined,
     provenance: {
       actor: owner,
       actor_kind: recallSourceToActor(m.source),
@@ -128,15 +120,20 @@ export function recordToRecallCapture(d: MemoryDraft): {
 // Recall ids are uuids; UMP ids are `urn:ump:<base32>`. We namespace Recall
 // ids so they round-trip without collision.
 
-export function toAmpId(recallId: string): string {
+export function toUmpId(recallId: string): string {
   if (/^urn:ump:/.test(recallId)) return recallId;
   return "urn:ump:" + base32(recallId);
 }
 
-export function fromAmpId(ampId: string): string {
-  const m = /^urn:ump:(.+)$/.exec(ampId);
-  return m ? unbase32(m[1]!) : ampId;
+export function fromUmpId(umpId: string): string {
+  const m = /^urn:ump:(.+)$/.exec(umpId);
+  return m ? unbase32(m[1]!) : umpId;
 }
+
+/** @deprecated use toUmpId */
+export const toAmpId = toUmpId;
+/** @deprecated use fromUmpId */
+export const fromAmpId = fromUmpId;
 
 function recallSourceToActor(source?: string): ActorKind {
   if (!source) return "agent";
