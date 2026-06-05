@@ -191,4 +191,7 @@ node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md
 
 ## License
 
-Apache-2.0. See [LICENSE](./LICENSE).
+`@ump/core`, adapters, examples, and code are MIT. See [LICENSE](./LICENSE).
+
+Specification and documentation prose are CC-BY-4.0. See
+[LICENSE-DOCS](./LICENSE-DOCS).
