@@ -21,6 +21,7 @@ import type {
 import { UMP_VERSION, UmpError } from "./types.ts";
 import type { MemoryStore } from "./store.ts";
 import { validateDraft } from "./validate.ts";
+import { recordVisibleForScope } from "./policy.ts";
 
 /** A record-change event emitted to `subscribe` listeners (SPEC §3.8). */
 export interface ChangeEvent {
@@ -86,7 +87,9 @@ export class UmpServer {
   async recall(req: RecallRequest): Promise<RecallResponse> {
     if (!req.query?.trim()) throw new UmpError("invalid_record", "empty query");
     const results = await this.store.search(req);
-    return { results };
+    return {
+      results: results.filter((r) => recordVisibleForScope(r.record, req.scope)),
+    };
   }
 
   async get(id: string): Promise<MemoryRecord> {

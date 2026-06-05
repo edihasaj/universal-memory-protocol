@@ -112,12 +112,16 @@ describe("bi-temporal revise: supersede, never delete (SPEC §2.3, §3.5)", () =
     expect(successor.body.text).toContain("bun");
 
     // "now" recall should not surface the closed prior.
-    const now = await s.recall({ query: "package manager pnpm bun" });
+    const now = await s.recall({
+      query: "package manager pnpm bun",
+      scope: { owner: OWNER.did },
+    });
     expect(now.results.find((r) => r.record.id === id)).toBeUndefined();
 
     // point-in-time recall in the past still finds it.
     const past = await s.recall({
       query: "package manager pnpm",
+      scope: { owner: OWNER.did },
       filter: { valid_at: "2026-06-04T10:00:00Z", status: ["active", "candidate"] },
     });
     expect(past.results.some((r) => r.record.id === id)).toBe(true);
@@ -130,8 +134,42 @@ describe("forget (SPEC §3.6)", () => {
     const { id } = await s.remember(draft("temporary scratch note about widgets"));
     await s.forget({ id, reason: "user_revoked" });
     expect((await s.get(id)).lifecycle?.status).toBe("tombstoned");
-    const res = await s.recall({ query: "widgets scratch note" });
+    const res = await s.recall({
+      query: "widgets scratch note",
+      scope: { owner: OWNER.did },
+    });
     expect(res.results.find((r) => r.record.id === id)).toBeUndefined();
+  });
+});
+
+describe("scope filtering before ranking (SPEC §5.3)", () => {
+  it("does not return private records across owners even on exact text match", async () => {
+    const s = makeServer();
+    const other = generateKeyPair(new Uint8Array(32).fill(8));
+    const { id } = await s.remember(draft("secret package manager is pnpm"));
+
+    const leaked = await s.recall({
+      query: "secret package manager pnpm",
+      scope: { owner: other.did, project: "edihasaj/recall" },
+    });
+    expect(leaked.results.find((r) => r.record.id === id)).toBeUndefined();
+
+    const owner = await s.recall({
+      query: "secret package manager pnpm",
+      scope: { owner: OWNER.did, project: "edihasaj/recall" },
+    });
+    expect(owner.results.some((r) => r.record.id === id)).toBe(true);
+  });
+
+  it("only returns public records when no owner scope is provided", async () => {
+    const s = makeServer();
+    await s.remember(draft("private package manager is pnpm"));
+    const pub = await s.remember(draft("public package manager is bun", {
+      scope: { owner: OWNER.did, project: "edihasaj/recall", visibility: "public" },
+    }));
+
+    const res = await s.recall({ query: "package manager" });
+    expect(res.results.map((r) => r.record.id)).toEqual([pub.id]);
   });
 });
 
