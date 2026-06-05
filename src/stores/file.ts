@@ -15,8 +15,11 @@ import type { MemoryRecord, RecallRequest, RecallResult } from "../types.ts";
 export class JsonFileStore implements MemoryStore {
   private inner = new InMemoryStore();
   private writeQueue: Promise<void> = Promise.resolve();
+  private filePath: string;
 
-  private constructor(private filePath: string) {}
+  private constructor(filePath: string) {
+    this.filePath = filePath;
+  }
 
   static async open(filePath: string): Promise<JsonFileStore> {
     const store = new JsonFileStore(filePath);
