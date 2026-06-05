@@ -3,7 +3,7 @@
 **Title:**
 Show HN: UMP - portable memory for AI agents, works with any MCP host
 
-**URL:** https://universalmemoryprotocol.io
+**URL:** <project site or repo>
 
 **Body:**
 
@@ -37,8 +37,8 @@ What's actually in the spec (the parts I think matter):
 - Three bindings (MCP / HTTP / file) and four conformance levels (L0-L3) so you
   can adopt a `.ump.json` export today or run the full signed runtime.
 
-Working reference SDK (Apache-2.0), conformance suite that self-certifies L3, and
-an adapter that serves it over an existing memory engine. Spec is CC-BY-4.0.
+Working reference SDK (MIT), conformance suite that self-certifies L3, and an
+adapter that serves it over an existing memory engine. Spec and code are MIT.
 
 I'd love feedback on the record format and the trust model specifically. Repo:
 https://github.com/<org>/universal-memory-protocol
@@ -50,5 +50,5 @@ https://github.com/<org>/universal-memory-protocol
 - *"Why not just files / Obsidian?"* File-only formats skip the hard parts:
   negotiation, signing/ownership, bi-temporal staleness, consent, injection
   safety, access control. UMP specifies those; the file binding is one of three.
-- *"ccTLD / longevity?"* Spec + code are portable and signed; the domain is just
-  a pointer.
+- *"What if the project site moves?"* Spec + code are portable and signed; the
+  site is just a pointer.

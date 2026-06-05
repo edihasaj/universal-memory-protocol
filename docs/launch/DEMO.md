@@ -38,4 +38,4 @@ Show ownership + portability:
 >  to any tool that speaks UMP."
 
 ## Closing card (1:20-1:30)
-universalmemoryprotocol.io - MCP = tools, A2A = coordination, UMP = memory.
+UMP - MCP = tools, A2A = coordination, memory needs its own portable layer.

@@ -16,7 +16,7 @@ const baseUrl = args.find((a) => !a.startsWith("--") && a !== token) ?? "http://
 const report = await runConformance(baseUrl, { token });
 
 const tick = (ok: boolean) => (ok ? "\x1b[32m✓\x1b[0m" : "\x1b[31m✗\x1b[0m");
-process.stdout.write(`\nAMP conformance - ${baseUrl}\n\n`);
+process.stdout.write(`\nUMP conformance - ${baseUrl}\n\n`);
 for (const c of report.checks) {
   process.stdout.write(`  ${tick(c.ok)} [${c.level}] ${c.id}  \x1b[2m${c.detail}\x1b[0m\n`);
 }

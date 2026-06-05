@@ -1,25 +1,18 @@
 # Universal Memory Protocol (UMP)
 
-> The portable memory layer for AI agents. What MCP did for tools, UMP does for memory.
+> A portable memory protocol for AI agents.
 
-**Status:** Draft v0.1 (design proposal) · **Reference SDK/server:** `@ump/core` · **Reference engine adapter:** [Recall](https://github.com/edihasaj/recall)
+**Status:** Draft v0.1 · **Package:** `@ump/core` · **Bindings:** MCP, HTTP, file export
 
----
+UMP standardizes how agents read, write, revise, forget, and exchange memory
+across tools, runtimes, and storage engines. It is not a database and it is not a
+single memory product. It is a small protocol surface, a portable signed record
+format, and reference SDK/server code that any agent harness or memory backend
+can implement.
 
-## The one-paragraph pitch
+## Use It Now
 
-Every agent harness - Claude Code, Codex, ChatGPT, and the open-source long tail
-(openclaw, oktapod, LangGraph, Letta…) - is reinventing memory in a private,
-non-portable way. Your corrections, preferences, and project knowledge are
-trapped inside whichever tool learned them. **UMP is an open standard for how
-agents read, write, and exchange memory** - a small set of negotiated operations
-over a portable, signed, bi-temporal record format. Any harness can speak it; any
-store can serve it; the user owns and can export the result.
-
-## Use it now (any MCP host)
-
-Add persistent, portable memory to Claude Code, Cursor, Codex, or any MCP host in
-one line. Add to your MCP client config:
+Add persistent UMP memory to any MCP host:
 
 ```jsonc
 {
@@ -29,158 +22,173 @@ one line. Add to your MCP client config:
 }
 ```
 
-The agent gets `ump.remember` / `ump.recall` (plus `get/revise/forget/feedback`).
-Memory persists to `~/.ump/memory.ump.json` as a portable, signed file - switch
-tools, point the next one at the same store (or its export), and your agent keeps
-everything it learned. That portability is the whole point.
+The server exposes:
 
-## Why now, and why this shape
+- `ump.capabilities`
+- `ump.recall`
+- `ump.remember`
+- `ump.get`
+- `ump.revise`
+- `ump.forget`
+- `ump.feedback`
 
-Three things are true in 2026:
+By default, `ump-memory` stores portable records in `~/.ump/memory.ump.json`.
+Set `UMP_STORE=markdown` to store human-editable `*.ump.md` records instead.
 
-1. **MCP has no memory primitive.** It standardized *tools, resources, prompts* -
-   not memory. "Memory" today is just a bespoke tool surface bolted onto MCP, with
-   different verbs in every product (`add_memories`, `core_memory_append`,
-   `/memories` CRUD…). No interop.
-2. **The interchange formats (PAM, MIF) are static files.** Great schemas, but no
-   runtime, no negotiation, no access control. They describe a memory; they don't
-   let two agents *talk* about memory.
-3. **The data model has already converged.** Independently, Recall, oktapod,
-   openclaw, Letta, Zep, LangMem, Mem0 all landed on the same ingredients:
-   typed memories, hybrid retrieval, hierarchical scopes, provenance,
-   supersession-over-deletion, consolidation. The hard design work is *done* - it
-   just isn't *standardized*.
+## Why UMP Exists
 
-So UMP does **not** invent a new wire protocol. The lesson of MCP is *minimal
-primitives + ride existing rails + great SDKs + neutral governance*. UMP is:
+Agent memory is fragmented. Claude Code, Codex, ChatGPT, local agents, memory
+engines, and framework-specific stores all use different verbs, record shapes,
+scope rules, export formats, and retention behavior. That creates lock-in and
+makes memory hard to audit, migrate, or share across agents.
 
-```
-  ┌─────────────────────────────────────────────────────────┐
-  │  UMP = Portable Record Format  +  6 operations  +        │
-  │        3 bindings (MCP profile / HTTP / file export)     │
-  └─────────────────────────────────────────────────────────┘
+UMP gives the ecosystem one interoperable contract:
+
+```text
+portable record format + 6 core operations + MCP/HTTP/file bindings
 ```
 
-It rides MCP's transport (so Claude/Codex/any MCP client speaks it with zero new
-infra), reuses W3C PROV + DID + the PAM/MIF schema for the record, and adds the
-one thing nobody owns: **the negotiated, access-controlled runtime in the middle.**
+MCP standardizes tool access. A2A standardizes agent coordination. UMP
+standardizes memory portability.
 
-## Where UMP sits
+## What UMP Standardizes
 
-| Layer        | Standard | What it carries            |
-|--------------|----------|----------------------------|
-| Tools        | **MCP**  | callable functions, resources |
-| Coordination | **A2A**  | agent-to-agent invocation  |
-| **Memory**   | **UMP**  | **portable knowledge across sessions, agents, and vendors** |
+UMP standardizes the parts that must match for memory to travel:
 
-UMP sits *beside* MCP and A2A, not on top. It is the third leg.
+- record shape: kind, body, scope, time, lifecycle, relations, provenance,
+  consent, integrity
+- operations: capability negotiation, recall, remember, get, revise, forget
+- bindings: MCP tools, HTTP endpoints, JSON/Markdown file exports
+- conformance: L0 through L3 so implementers can adopt incrementally
+- safety: supersession instead of destructive updates, consent-aware export,
+  scoped retrieval, signed records at the full tier
 
-## The six operations
+UMP deliberately does not standardize the retrieval algorithm, embedding model,
+database, ranking policy, summarization strategy, or consolidation engine. Those
+remain implementation choices.
 
-| Op | Purpose |
-|----|---------|
-| `capabilities` | Negotiate: which kinds, bindings, conformance level, retrieval signals a peer supports |
-| `recall`       | Search memory by query + scope → ranked records with per-result signals |
-| `remember`     | Write a new memory (or merge into an existing one) |
-| `get`          | Fetch a memory by id |
-| `revise`       | Supersede/update a memory - **never destructive**, history preserved |
-| `forget`       | Tombstone a memory with a reason - honors consent/retention |
+## Core Operations
 
-Plus two optional Full-tier ops: `feedback` (was an injected memory followed,
-overridden, ignored, contradicted?) and `subscribe` (push updates).
+| Operation | Purpose |
+| --- | --- |
+| `capabilities` | Negotiate supported kinds, bindings, conformance, limits, and signals. |
+| `recall` | Search memory by query, scope, filters, and time. |
+| `remember` | Write a new memory, or merge it if the store chooses. |
+| `get` | Fetch a memory by id. |
+| `revise` | Supersede a memory while preserving history. |
+| `forget` | Tombstone a memory with a reason. |
 
-That's the whole surface. A conforming client is ~100 lines.
+Optional full-tier operations:
 
-## Conformance levels (adopt incrementally)
+| Operation | Purpose |
+| --- | --- |
+| `feedback` | Report whether a recalled memory was followed, ignored, overridden, or contradicted. |
+| `subscribe` | Stream memory changes where supported. |
 
-- **L0 - Portable Record:** read/write the `*.ump.json` / `*.ump.md` file format. No server.
-- **L1 - Core:** `capabilities` + `recall` + `remember` + `get`.
-- **L2 - Standard:** adds `revise` + `forget`, bi-temporal validity, provenance, scope + consent.
-- **L3 - Full:** adds `feedback` + `subscribe`, signed integrity, capability-scoped tokens, contradiction relations.
+## Conformance Levels
 
-A repo can ship a `.ump/` export (L0) the same day; a harness can wire the MCP
-profile (L1) in an afternoon.
+| Level | Requirement |
+| --- | --- |
+| L0 | Portable `*.ump.json` or `*.ump.md` records. No server required. |
+| L1 | `capabilities`, `recall`, `remember`, and `get`. |
+| L2 | `revise`, `forget`, bi-temporal validity, provenance, scope, and consent. |
+| L3 | Feedback, subscribe, signed integrity, capability-scoped tokens, and contradiction relations. |
 
-## Repo layout
-
-- **[SPEC.md](./SPEC.md)** - the draft standard: record schema, operations, bindings, conformance, trust.
-- **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
-- **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: `@ump/core`, Recall as a production engine adapter, governance, the path to Anthropic/OpenAI.
-- **`src/`** - `@ump/core`, the reference SDK + minimal server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
-- **Stores** - in-memory, JSON file, Markdown directory, Postgres, SQLite,
-  Redis, and BYO vector DB clients for Qdrant/Pinecone/Weaviate-style engines.
-- **`adapters/recall/`** - serve UMP over [Recall](https://github.com/edihasaj/recall)'s engine.
-- **`examples/round-trip.ts`** - write, recall, export, import across "vendors", signature intact.
-- **docs site** - lives in a separate repo (`universal-memory-protocol-docs`, Astro Starlight, deploys to Cloudflare Pages).
-
-## Run it
+Run the conformance probe against an HTTP endpoint:
 
 ```bash
-pnpm install
-pnpm typecheck                                          # tsc --noEmit
-pnpm test                                               # conformance + binding tests
-pnpm build                                              # tsup -> dist (esm + d.ts + bins)
-node --experimental-strip-types examples/round-trip.ts  # the cross-vendor demo
-UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts  # MCP stdio + HTTP
-node --experimental-strip-types src/bin/memory.ts               # persistent ~/.ump server
-UMP_STORE=markdown node --experimental-strip-types src/bin/memory.ts
-node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md AGENTS.md
-pnpm conformance http://localhost:4000                  # report the endpoint's proven conformance level
+pnpm conformance http://localhost:4000
 ```
 
-## Store implementations
+## Store Implementations
 
-`UmpServer` accepts any `MemoryStore`. The package ships dependency-light
-implementations for common adoption paths:
+`UmpServer` accepts any `MemoryStore`. The package ships dependency-light stores
+for common adoption paths:
 
 | Store | Use case |
 | --- | --- |
-| `InMemoryStore` | tests, examples, ephemeral reference server |
-| `JsonFileStore` | local persistent `memory.ump.json` export |
-| `MarkdownDirectoryStore` | human-editable `*.ump.md` files |
-| `PostgresStore` | `pg`/Postgres-compatible client |
-| `SqliteStore` | `better-sqlite3` / `node:sqlite`-style client |
-| `RedisStore` | Redis hash persistence |
-| `VectorStore` / `QdrantStore` / `PineconeStore` / `WeaviateStore` | BYO vector DB client + embedding function |
+| `InMemoryStore` | Tests, examples, and ephemeral servers. |
+| `JsonFileStore` | Local persistent `memory.ump.json` records. |
+| `MarkdownDirectoryStore` | Human-editable `*.ump.md` records. |
+| `PostgresStore` | Postgres-compatible clients. |
+| `SqliteStore` | SQLite-compatible clients. |
+| `RedisStore` | Redis hash persistence. |
+| `VectorStore` | Generic vector-backed store wrapper. |
+| `QdrantStore` | Qdrant-style vector clients. |
+| `PineconeStore` | Pinecone-style vector clients. |
+| `WeaviateStore` | Weaviate-style vector clients. |
+| `RecallStore` | Adapter for a Recall-backed memory engine. |
 
-Vendor clients stay outside `@ump/core`, so adding UMP does not force native
-builds or cloud SDKs into every install.
+Vendor database SDKs stay outside `@ump/core`, so installing the protocol package
+does not force native builds or cloud clients into every project.
 
-## Import existing memory files
+## Existing Memory Imports
 
-UMP stays separate from vendor/system-specific memory files, but `@ump/core`
-ships import helpers so people have a practical migration path:
+UMP stays separate from vendor-specific memory files, but `@ump/core` includes
+import helpers so users can migrate existing memory into portable UMP records.
 
 ```bash
-# Import CLAUDE.md / AGENTS.md / generic Markdown into portable UMP drafts.
 node --experimental-strip-types src/bin/import.ts \
   --owner did:key:zYourOwner \
-  --project github.com/you/repo \
+  --project github.com/example/repo \
   --out .ump/import.ump.json \
   CLAUDE.md AGENTS.md ~/Documents/main
 ```
 
 Supported source kinds:
 
-- `claude` - `CLAUDE.md` style instructions.
-- `agents` - `AGENTS.md` style repo/agent instructions.
-- `recall` - Recall exports/context files.
-- `obsidian` - vault folders and notes.
-- `generic_markdown` - any Markdown file or directory.
+| Source kind | Input |
+| --- | --- |
+| `claude` | `CLAUDE.md` style instructions. |
+| `agents` | `AGENTS.md` style repo or agent instructions. |
+| `recall` | Recall exports and context files. |
+| `obsidian` | Obsidian-style vault folders and notes. |
+| `generic_markdown` | Any Markdown file or directory. |
 
-Importers return UMP `MemoryDraft` records with `provenance.method` like
-`filesystem:claude`. They are adoption bridges, not protocol requirements.
+Importers emit UMP `MemoryDraft` records with source provenance such as
+`filesystem:claude`. They are migration bridges, not protocol requirements.
 
-## Name & domains
+## Recall's Role
 
-Canonical name **Universal Memory Protocol (UMP)**; the third interop layer beside
-*Model Context Protocol* and *Agent2Agent*. Primary domain
-**universalmemoryprotocol.io** (`.org`/`.dev`/`.ai` available to reserve). The name
-"Open Memory Protocol" is intentionally avoided - it belongs to a separate
-conversation-transcript-backup project (see [docs/RATIONALE.md](./docs/RATIONALE.md)).
+Recall is one implementation target: a rich memory engine that can be exposed
+through UMP via `RecallStore`. It is not the protocol, not a required dependency,
+and not the only valid backend.
+
+The reference protocol surface lives in `@ump/core`: schema, types, bindings,
+server helpers, stores, importers, and conformance tests. Recall exists to prove
+that UMP can wrap a production-grade memory engine without making the standard
+vendor-specific.
+
+## Run Locally
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Useful commands:
+
+```bash
+node --experimental-strip-types examples/round-trip.ts
+node --experimental-strip-types src/bin/memory.ts
+UMP_STORE=markdown node --experimental-strip-types src/bin/memory.ts
+UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts
+node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md AGENTS.md
+```
+
+## Repo Layout
+
+| Path | Purpose |
+| --- | --- |
+| `SPEC.md` | Draft protocol specification. |
+| `src/` | Reference SDK/server, schema, bindings, stores, importers, and CLIs. |
+| `adapters/recall/` | Recall-backed `MemoryStore` adapter. |
+| `test/` | Binding, store, importer, conformance, and adapter tests. |
+| `examples/` | Round-trip portability demos. |
+| `docs/` | Rationale, adoption notes, and launch materials. |
 
 ## License
 
-Code (`@ump/core`, adapters, examples): **Apache-2.0** (see [LICENSE](./LICENSE)).
-Spec prose (`SPEC.md`): **CC-BY-4.0** (proposed). Neutral stewardship intended;
-see [docs/ADOPTION.md](./docs/ADOPTION.md).
+MIT. See [LICENSE](./LICENSE).

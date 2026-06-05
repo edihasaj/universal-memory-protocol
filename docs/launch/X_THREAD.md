@@ -45,16 +45,16 @@ L3 the full signed, access-controlled runtime.
 
 **7/**
 It's real, not a slide deck:
-- reference SDK (Apache-2.0)
+- reference SDK (MIT)
 - conformance suite that self-certifies L3
 - an adapter that serves UMP over an existing memory engine
 
-Spec CC-BY-4.0. Built to be vendor-neutral.
+Spec and code MIT. Built to be vendor-neutral.
 
 **8/**
 If you build agents, agent frameworks, or memory tools: I want UMP to be the
 boring, shared layer underneath all of it. Read the spec, poke holes in the
 record format + trust model, build an adapter.
 
-universalmemoryprotocol.io
+<project site>
 github.com/<org>/universal-memory-protocol

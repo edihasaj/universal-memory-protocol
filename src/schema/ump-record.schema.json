@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://universalmemoryprotocol.org/schema/0.1/record.json",
+  "$id": "urn:ump:schema:record:0.1",
   "title": "UMP Memory Record",
   "description": "Universal Memory Protocol 0.1 - the portable memory record (SPEC §2).",
   "type": "object",

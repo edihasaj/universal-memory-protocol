@@ -45,7 +45,7 @@ people find when browsing. Submit `ump-memory` everywhere an MCP server is liste
 
 ## Credibility prerequisites (do before heavy outreach)
 - [ ] Repos public
-- [ ] Docs site live at universalmemoryprotocol.io
+- [ ] Docs site or repo URL ready for launch
 - [ ] >=2 independent implementations (reference + Recall + one framework adapter)
 - [ ] GOVERNANCE.md visible (neutral-stewardship intent)
 - [ ] Demo GIF in the README

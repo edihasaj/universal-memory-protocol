@@ -48,7 +48,7 @@ projection is defined in §6.3.
   "scope": {                             // REQUIRED. who/where this applies (§2.2)
     "owner": "did:key:z6Mk…",            // REQUIRED. the operator's DID
     "user": "did:key:z6Mk…",             // OPTIONAL. subject, if not the owner
-    "project": "github.com/edihasaj/recall",
+    "project": "github.com/example/project",
     "agent": "claude-code",              // OPTIONAL. producing/consuming agent
     "session": "sess_abc",               // OPTIONAL. session binding
     "visibility": "private"              // private | shared | public
@@ -109,7 +109,7 @@ accept all five and MAY ignore kinds it does not use.
 | `episodic`   | a specific past event | "on 2026-06-01 the deploy failed because of X" |
 | `procedural` | how-to / behavioral rule | "always run `pnpm gate` before handoff" |
 | `working`    | short-lived task context | "currently refactoring the auth module" |
-| `identity`   | who the user/agent is | "Edi, owner, telegraph style" |
+| `identity`   | who the user/agent is | "operator prefers concise handoffs" |
 
 ### 2.2 Scope
 

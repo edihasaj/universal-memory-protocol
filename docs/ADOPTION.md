@@ -70,13 +70,12 @@ Thin shims so UMP isn't all-or-nothing:
 - [ ] A "round-trip" demo: a memory written in Claude Code, recalled in Codex,
       exported to a file, re-imported into ChatGPT - the money shot.
 
-## 5. Governance & naming
+## 5. Governance
 
-- **Name:** working title **Universal Memory Protocol (UMP)**. Descriptive, rhymes with
-  MCP, signals the positioning. Alternatives if UMP collides: *Agent Memory
-  Protocol (UMP - note Sourcegraph/Google UMP collision)*, codename *Engram*.
-  **Open decision - Edi's call** (§7).
-- **License:** spec under CC-BY-4.0; SDKs Apache-2.0/MIT. Permissive on purpose.
+- **Name:** **Universal Memory Protocol (UMP)**. Descriptive, adjacent to MCP,
+  and clear about the missing interop layer: memory.
+- **License:** MIT for the spec, SDK/server, adapters, examples, and docs.
+  Permissive on purpose.
 - **Stewardship:** start single-author for velocity, but commit publicly to neutral
   governance early (a working group / foundation track) - the difference between a
   trusted standard and a distrusted vendor spec. MCP's perceived neutrality was
@@ -94,13 +93,12 @@ Thin shims so UMP isn't all-or-nothing:
 4. **1.0:** ≥2 interop implementations across vendors; freeze the record + ops;
    move governance to a neutral steward.
 
-## 7. Decisions for Edi
+## 7. Remaining decisions
 
-1. **Name** - go with UMP, or pick from alternatives / something new?
-2. **Implementation split** - keep `@ump/core` as the minimal standalone
+1. **Implementation split** - keep `@ump/core` as the minimal standalone
    reference server and Recall as one richer production implementation?
-3. **Ambition tier** - (a) a tight interchange + MCP profile we ship fast, or
+2. **Ambition tier** - (a) a tight interchange + MCP profile we ship fast, or
    (b) the full negotiated protocol with signing/capability tokens aiming at
    Anthropic/OpenAI adoption? (Spec is written for (b); we can ship (a) first.)
-4. **Where it lives** - `edihasaj/universal-memory-protocol` public from the start, or
-   incubate private until v0.2?
+3. **Stewardship path** - when to move from single-repo velocity to a working
+   group or foundation-style governance model.
