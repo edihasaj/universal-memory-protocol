@@ -7,17 +7,19 @@ from draft to ecosystem, leaning on assets we already own.
 
 ## 1. Strategy in one line
 
-Ship a working **reference implementation (Recall)** + **SDK** + **conformance
-suite** first; make adoption cost ~an afternoon via the MCP profile; wrap existing
-stores with adapters so UMP delivers value with a *single* vendor on day one.
-Only then push for spec ratification. (MCP did SDKs-before-spec-evangelism; copy it.)
+Ship a working **reference SDK/server (`@ump/core`)** + **conformance suite**
+first; use **Recall as the first rich production engine adapter**; make adoption
+cost ~an afternoon via the MCP profile; wrap existing stores with adapters so UMP
+delivers value with a *single* vendor on day one. Only then push for spec
+ratification. (MCP did SDKs-before-spec-evangelism; copy it.)
 
 ---
 
-## 2. Recall as the reference implementation
+## 2. Recall as the first production engine adapter
 
-Recall already implements ~80% of an L3 server. The work is exposing, not
-building. Mapping:
+Recall already implements many L2/L3-grade memory engine behaviors. The work is
+exposing those behaviors through UMP, not making Recall the protocol dependency.
+Mapping:
 
 | UMP | Recall today | Work |
 |-----|--------------|------|
@@ -37,7 +39,8 @@ building. Mapping:
 | file binding | CLAUDE.md / AGENTS.md / `.recall/context.md` | add `*.ump.json` + `*.ump.md` + `.well-known/ump.json` |
 
 Deliverable: Recall ships an `--ump` mode advertising `UMP 0.1 / L2` (then L3),
-proving the spec end-to-end and giving the ecosystem a real server to test against.
+proving the spec against a real memory engine while `@ump/core` remains the
+neutral reference SDK/server.
 
 ## 3. Adapters (value with one vendor, day one)
 
@@ -61,7 +64,7 @@ Thin shims so UMP isn't all-or-nothing:
 - [ ] `ump-spec` (this repo) - SPEC + JSON Schema for the record + test vectors.
 - [ ] `ump-js` / `ump-py` SDKs - client + server helpers, MCP+HTTP+file bindings.
 - [ ] Conformance suite - runs L0-L3 assertions against any endpoint; emits a badge.
-- [ ] Recall `--ump` reference server (L2 → L3).
+- [ ] Recall `--ump` production engine adapter (L2 → L3).
 - [ ] 2 adapters that interoperate (e.g. Recall ↔ openclaw) - proves portability.
 - [ ] `.well-known/ump.json` discovery + a public example export.
 - [ ] A "round-trip" demo: a memory written in Claude Code, recalled in Codex,
@@ -94,8 +97,8 @@ Thin shims so UMP isn't all-or-nothing:
 ## 7. Decisions for Edi
 
 1. **Name** - go with UMP, or pick from alternatives / something new?
-2. **Reference impl** - fork Recall to a clean `ump` mode, or build a minimal
-   standalone reference server and keep Recall as one (richer) implementation?
+2. **Implementation split** - keep `@ump/core` as the minimal standalone
+   reference server and Recall as one richer production implementation?
 3. **Ambition tier** - (a) a tight interchange + MCP profile we ship fast, or
    (b) the full negotiated protocol with signing/capability tokens aiming at
    Anthropic/OpenAI adoption? (Spec is written for (b); we can ship (a) first.)

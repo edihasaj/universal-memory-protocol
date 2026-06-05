@@ -2,7 +2,7 @@
 
 > The portable memory layer for AI agents. What MCP did for tools, UMP does for memory.
 
-**Status:** Draft v0.1 (design proposal) · **Reference implementation:** [Recall](https://github.com/edihasaj/recall)
+**Status:** Draft v0.1 (design proposal) · **Reference SDK/server:** `@ump/core` · **Reference engine adapter:** [Recall](https://github.com/edihasaj/recall)
 
 ---
 
@@ -105,7 +105,7 @@ profile (L1) in an afternoon.
 
 - **[SPEC.md](./SPEC.md)** - the draft standard: record schema, operations, bindings, conformance, trust.
 - **[docs/RATIONALE.md](./docs/RATIONALE.md)** - landscape survey + every design decision and why.
-- **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: Recall as reference impl, adapters, governance, the path to Anthropic/OpenAI.
+- **[docs/ADOPTION.md](./docs/ADOPTION.md)** - rollout: `@ump/core`, Recall as a production engine adapter, governance, the path to Anthropic/OpenAI.
 - **`src/`** - `@ump/core`, the reference SDK + minimal server (canonicalization, DID/Ed25519 signing, the six ops, three bindings).
 - **Stores** - in-memory, JSON file, Markdown directory, Postgres, SQLite,
   Redis, and BYO vector DB clients for Qdrant/Pinecone/Weaviate-style engines.

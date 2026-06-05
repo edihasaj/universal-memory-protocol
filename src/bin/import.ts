@@ -21,7 +21,7 @@ const out = takeFlag("--out");
 const sourceKind = takeFlag("--kind") as ImportSource["kind"] | undefined;
 
 if (!owner || args.length === 0) {
-  process.stderr.write("usage: ump-import --owner <did-or-owner> [--project repo] [--kind claude|agents|recall|obsidian|generic_markdown] [--out file.ump.json] <file-or-dir...>\n");
+  process.stderr.write("usage: ump-import --owner <did-or-owner> [--project repo] [--kind agents|claude|recall|obsidian|generic_markdown] [--out file.ump.json] <file-or-dir...>\n");
   process.exit(2);
 }
 

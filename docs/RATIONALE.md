@@ -74,7 +74,7 @@ discovery convention, §4.3). Positioned beside **A2A** (coordination) and **MCP
 Three independent codebases in `~/Projects` already converged on UMP's model -
 strong evidence the abstractions are real, not invented:
 
-**Recall** (`recall/`) - the reference implementation candidate. Already has:
+**Recall** (`recall/`) - the production engine adapter candidate. Already has:
 typed memories (rule/command/gotcha/decision/review_pattern → map to UMP kinds),
 hierarchical scopes (session/path/repo/team/global), confidence-based lifecycle,
 evidence/provenance, contradiction detection, hybrid retrieval (sqlite-vec + FTS
