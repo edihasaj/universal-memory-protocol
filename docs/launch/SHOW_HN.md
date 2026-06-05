@@ -37,8 +37,9 @@ What's actually in the spec (the parts I think matter):
 - Three bindings (MCP / HTTP / file) and four conformance levels (L0-L3) so you
   can adopt a `.ump.json` export today or run the full signed runtime.
 
-Working reference SDK (MIT), conformance suite that self-certifies L3, and an
-adapter that serves it over an existing memory engine. Spec and code are MIT.
+Working reference SDK (Apache-2.0), conformance suite that self-certifies L3, and
+an adapter that serves it over an existing memory engine. Spec and code are
+Apache-2.0.
 
 I'd love feedback on the record format and the trust model specifically. Repo:
 https://github.com/<org>/universal-memory-protocol

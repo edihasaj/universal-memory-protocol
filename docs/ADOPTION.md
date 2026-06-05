@@ -74,8 +74,8 @@ Thin shims so UMP isn't all-or-nothing:
 
 - **Name:** **Universal Memory Protocol (UMP)**. Descriptive, adjacent to MCP,
   and clear about the missing interop layer: memory.
-- **License:** MIT for the spec, SDK/server, adapters, examples, and docs.
-  Permissive on purpose.
+- **License:** Apache-2.0 for the spec, SDK/server, adapters, examples, and docs.
+  Permissive, with an explicit patent grant.
 - **Stewardship:** start single-author for velocity, but commit publicly to neutral
   governance early (a working group / foundation track) - the difference between a
   trusted standard and a distrusted vendor spec. MCP's perceived neutrality was

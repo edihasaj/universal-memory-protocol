@@ -191,4 +191,4 @@ node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Apache-2.0. See [LICENSE](./LICENSE).
