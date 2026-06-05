@@ -168,14 +168,32 @@ pnpm test
 pnpm build
 ```
 
-Useful commands:
+## The `ump` CLI
+
+Install once, then drive everything from one command:
 
 ```bash
-node --experimental-strip-types examples/round-trip.ts
-node --experimental-strip-types src/bin/memory.ts
-UMP_STORE=markdown node --experimental-strip-types src/bin/memory.ts
-UMP_HTTP=4000 node --experimental-strip-types src/bin/serve.ts
-node --experimental-strip-types src/bin/import.ts --owner did:key:z... CLAUDE.md AGENTS.md
+npm install -g @ump/core      # provides: ump, ump-memory, ump-serve, ump-conformance, ump-import
+```
+
+```bash
+ump memory                    # persistent MCP memory server (~/.ump)
+ump memory --http 4000        # also expose the HTTP binding
+ump memory --store markdown   # human-editable *.ump.md records
+ump serve --http 4000         # ephemeral in-memory reference server
+ump import --owner did:key:z... AGENTS.md CLAUDE.md
+ump conformance http://localhost:4000
+ump demo                      # the cross-vendor round-trip
+ump --help
+```
+
+No install? Use `npx -y @ump/core ump <command>`. MCP hosts point at the bin
+directly: `{ "command": "npx", "args": ["-y", "@ump/core", "ump-memory"] }`.
+
+From a clone (no build needed):
+
+```bash
+node --experimental-strip-types src/bin/ump.ts demo
 ```
 
 ## Repo Layout
