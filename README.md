@@ -2,13 +2,19 @@
 
 > A portable memory protocol for AI agents.
 
-**Status:** Live v0.1 · **Site:** <https://universalmemoryprotocol.io> · **Package:** `@universalmemoryprotocol/core` · **Bindings:** MCP, HTTP, file export
+**Status:** Live v0.1 · **Site:** <https://universalmemoryprotocol.io> · **Package:** [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core) · **Bindings:** MCP, HTTP, file export
 
 UMP standardizes how agents read, write, revise, forget, and exchange memory
 across tools, runtimes, and storage engines. It is not a database and it is not a
 single memory product. It is a small protocol surface, a portable signed record
 format, and reference SDK/server code that any agent harness or memory backend
 can implement.
+
+In simple terms: you may already have useful memories in agent files, Claude or
+Codex project notes, Recall exports, Obsidian folders, Postgres, Redis, SQLite,
+or a vector database. UMP turns those into one portable memory shape and one
+small operation set, so new agents and new stores can extend the same memory
+instead of starting from scratch.
 
 ## Use It Now
 
@@ -34,6 +40,77 @@ The server exposes:
 
 By default, `ump-memory` stores portable records in `~/.ump/memory.ump.json`.
 Set `UMP_STORE=markdown` to store human-editable `*.ump.md` records instead.
+
+## Implement It
+
+Use the MCP server for immediate agent integration, the TypeScript SDK for a
+native UMP implementation, or the HTTP binding from any language.
+
+```jsonc
+// MCP host config: Claude Code, Codex, Cursor, or any MCP client.
+{
+  "mcpServers": {
+    "ump": {
+      "command": "npx",
+      "args": ["-y", "@universalmemoryprotocol/core", "ump-memory"]
+    }
+  }
+}
+```
+
+```ts
+import {
+  JsonFileStore,
+  UmpServer,
+  generateKeyPair,
+} from "@universalmemoryprotocol/core";
+
+const key = generateKeyPair();
+const store = await JsonFileStore.open(".ump/memory.ump.json");
+const ump = new UmpServer({
+  name: "my-agent",
+  version: "1.0.0",
+  conformance: "L2",
+  store,
+  key,
+});
+
+await ump.remember({
+  kind: "procedural",
+  body: { text: "Use pnpm for this repository." },
+  scope: { owner: key.did, project: "github.com/acme/app", visibility: "private" },
+  provenance: { actor: key.did, actor_kind: "user", method: "user_correction" },
+});
+
+const memories = await ump.recall({
+  query: "package manager",
+  scope: { owner: key.did, project: "github.com/acme/app" },
+});
+```
+
+```bash
+# Any language: expose JSON over HTTP.
+UMP_HTTP=4000 npx -y @universalmemoryprotocol/core ump-memory
+```
+
+```py
+import requests
+
+base = "http://localhost:4000"
+owner = requests.get(f"{base}/.well-known/ump.json").json()["owner"]
+
+requests.post(f"{base}/ump/remember", json={
+    "kind": "semantic",
+    "body": {"text": "User prefers concise release notes."},
+    "scope": {"owner": owner, "project": "github.com/acme/app", "visibility": "private"},
+    "provenance": {"actor": owner, "actor_kind": "user", "method": "user_correction"},
+}).raise_for_status()
+
+hits = requests.post(f"{base}/ump/recall", json={
+    "query": "release note preference",
+    "scope": {"owner": owner, "project": "github.com/acme/app"},
+}).json()["results"]
+```
 
 ## Why UMP Exists
 
@@ -117,7 +194,7 @@ for common adoption paths:
 | `QdrantStore` / `PineconeStore` / `WeaviateStore` | Hosted vector clients. |
 | `RecallStore` | Opt-in adapter for a Recall-backed memory engine. |
 
-Vendor database SDKs stay outside `@universalmemoryprotocol/core`, so installing the protocol package
+Vendor database SDKs stay outside [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core), so installing the protocol package
 does not force native builds or cloud clients into every project.
 
 ### Choosing a backend
@@ -140,7 +217,7 @@ format, bindings, and protocol are identical across all of them.
 
 ## Existing Memory Imports
 
-UMP stays separate from vendor-specific memory files, but `@universalmemoryprotocol/core` includes
+UMP stays separate from vendor-specific memory files, but [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core) includes
 import helpers so users can migrate existing memory into portable UMP records.
 
 ```bash
@@ -170,7 +247,7 @@ Recall is one implementation target: a rich memory engine that can be exposed
 through UMP via `RecallStore`. It is not the protocol, not a required dependency,
 and not the only valid backend.
 
-The reference protocol surface lives in `@universalmemoryprotocol/core`: schema, types, bindings,
+The reference protocol surface lives in [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core): schema, types, bindings,
 server helpers, stores, importers, and conformance tests. Recall exists to prove
 that UMP can wrap a production-grade memory engine without making the standard
 vendor-specific.
@@ -227,7 +304,7 @@ node --experimental-strip-types src/bin/ump.ts demo
 
 Protocol GitHub repository: Apache-2.0. See [LICENSE](./LICENSE).
 
-`@universalmemoryprotocol/core`, adapters, examples, and package code are MIT. See
+[`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core), adapters, examples, and package code are MIT. See
 [LICENSE-PACKAGE](./LICENSE-PACKAGE).
 
 Specification and documentation prose are CC-BY-4.0. See
