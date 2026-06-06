@@ -17,12 +17,12 @@ this document states the intent and the path to neutral stewardship.
 
 ## Current stage
 
-UMP is at **draft v0.1**, authored by [@edihasaj](https://github.com/edihasaj).
+UMP is at **live v0.1**, authored by [@edihasaj](https://github.com/edihasaj).
 This is the bootstrap phase: one maintainer, fast iteration, public repo.
 
 ## Path to neutral stewardship
 
-1. **Draft (now).** Single maintainer, public RFC, reference implementation.
+1. **Live v0.1 (now).** Single maintainer, public spec, reference implementation.
 2. **Working group.** Recruit maintainers from independent implementers; decisions
    move to a documented proposal process (UMP Enhancement Proposals, "UEPs").
 3. **Foundation track.** Once there are multiple production implementations across
@@ -35,11 +35,11 @@ This is the bootstrap phase: one maintainer, fast iteration, public repo.
 - Substantive changes to the record format or the operations are **UEPs**: a
   short doc with motivation, spec delta, and migration notes.
 - A UEP is accepted when there is rough consensus and >=2 independent
-  implementations validate it. Until then it stays in `draft`.
+  implementations validate it. Until then it stays in proposal.
 
 ## Decision making
 
-While in the draft stage the maintainer is the tie-breaker, but the bias is
+While in the v0.1 bootstrap stage the maintainer is the tie-breaker, but the bias is
 toward deferring contentious calls until there is implementation evidence.
 The goal is to make the maintainer's tie-break vote matter less over time, not
 more.

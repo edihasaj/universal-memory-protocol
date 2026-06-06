@@ -1,6 +1,6 @@
 # Universal Memory Protocol - Specification
 
-**Version:** 0.1 (draft) · **Status:** request for comments
+**Version:** 0.1 · **Status:** live
 
 This document specifies UMP: a portable record format and a set of negotiated
 operations for reading, writing, and exchanging agent memory across harnesses,
