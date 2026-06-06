@@ -3,7 +3,7 @@
 **Title:**
 Show HN: UMP - portable memory for AI agents, works with any MCP host
 
-**URL:** <project site or repo>
+**URL:** https://universalmemoryprotocol.io
 
 **Body:**
 
@@ -42,7 +42,7 @@ adapter that serves it over an existing memory engine. Protocol repo is
 Apache-2.0; package code is MIT; docs are CC-BY-4.0.
 
 I'd love feedback on the record format and the trust model specifically. Repo:
-https://github.com/<org>/universal-memory-protocol
+https://github.com/edihasaj/universal-memory-protocol
 
 **Comment prep (anticipated):**
 - *"How is this different from mem0 / Letta / Zep?"* Those are great engines/

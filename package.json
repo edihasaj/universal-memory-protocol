@@ -4,6 +4,7 @@
   "description": "Universal Memory Protocol (UMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://universalmemoryprotocol.io",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edihasaj/universal-memory-protocol.git"

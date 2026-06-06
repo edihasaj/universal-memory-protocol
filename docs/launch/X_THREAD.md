@@ -56,5 +56,5 @@ If you build agents, agent frameworks, or memory tools: I want UMP to be the
 boring, shared layer underneath all of it. Read the spec, poke holes in the
 record format + trust model, build an adapter.
 
-<project site>
-github.com/<org>/universal-memory-protocol
+https://universalmemoryprotocol.io
+github.com/edihasaj/universal-memory-protocol

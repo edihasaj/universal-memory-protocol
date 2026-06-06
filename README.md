@@ -2,7 +2,7 @@
 
 > A portable memory protocol for AI agents.
 
-**Status:** Draft v0.1 · **Package:** `@universalmemoryprotocol/core` · **Bindings:** MCP, HTTP, file export
+**Status:** Draft v0.1 · **Site:** <https://universalmemoryprotocol.io> · **Package:** `@universalmemoryprotocol/core` · **Bindings:** MCP, HTTP, file export
 
 UMP standardizes how agents read, write, revise, forget, and exchange memory
 across tools, runtimes, and storage engines. It is not a database and it is not a
