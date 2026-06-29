@@ -1,20 +1,28 @@
 # Universal Memory Protocol (UMP)
 
-> A portable memory protocol for AI agents.
+> Portable memory for AI agents. Teach one tool, recall it in the next.
 
 **Status:** Live v0.1 · **Site:** <https://universalmemoryprotocol.io> · **Package:** [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core) · **Bindings:** MCP, HTTP, file export
 
-UMP standardizes how agents read, write, revise, forget, and exchange memory
-across tools, runtimes, and storage engines. It is not a database and it is not a
-single memory product. It is a small protocol surface, a portable signed record
-format, and reference SDK/server code that any agent harness or memory backend
-can implement.
+Your AI tools learn things - that this repo uses pnpm, that you like terse release
+notes, the gotcha that bit you last week - then lose all of it the moment you
+switch from Claude Code to Cursor to Codex. The knowledge is trapped inside
+whichever tool happened to learn it.
 
-In simple terms: you may already have useful memories in agent files, Claude or
-Codex project notes, Recall exports, Obsidian folders, Postgres, Redis, SQLite,
-or a vector database. UMP turns those into one portable memory shape and one
-small operation set, so new agents and new stores can extend the same memory
-instead of starting from scratch.
+UMP fixes that. It defines **one record format** for a memory and **six operations**
+for working with it (recall, remember, get, revise, forget, feedback), with
+bindings for MCP, HTTP, and plain files. Any agent or store that speaks UMP can
+read and extend the same memory, so a fact you teach one tool is there for the
+next one.
+
+It is a protocol, not a product: no database to run, no service to sign up for.
+The reference implementation keeps memory in a portable, signed file you own
+(`~/.ump/memory.ump.json`). Copy that file and you have moved your agent's memory
+to any other tool that speaks UMP.
+
+Already have memory in CLAUDE.md/AGENTS.md, Recall exports, Obsidian, Postgres,
+Redis, SQLite, or a vector DB? UMP wraps those rather than replacing them - see
+[Existing Memory Imports](#existing-memory-imports) and [Store Implementations](#store-implementations).
 
 ## Use It Now
 
