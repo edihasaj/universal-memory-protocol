@@ -50,6 +50,37 @@ describe("HTTP binding (SPEC §4.2)", () => {
   });
 });
 
+describe("revise (SPEC §3) preserves record body shape", () => {
+  async function seed(server: UmpServer) {
+    return server.remember({
+      kind: "semantic",
+      body: { text: "hello" },
+      scope: { owner: "did:key:zOwner", project: "p", visibility: "private" },
+      provenance: { actor: "did:key:zOwner", actor_kind: "user", method: "user_correction" },
+    });
+  }
+
+  it("keeps body as an object after a valid revise", async () => {
+    const server = srv();
+    const { id } = await seed(server);
+    const { id: revisedId } = await server.revise({ id, patch: { body: { text: "hi2" } } });
+    const got = await server.get(revisedId);
+    expect(Array.isArray(got.body)).toBe(false);
+    expect(got.body.text).toBe("hi2");
+  });
+
+  it("rejects a malformed body patch instead of corrupting the get format", async () => {
+    const server = srv();
+    const { id } = await seed(server);
+    await expect(
+      server.revise({ id, patch: { body: [{ text: "hi2" }] as unknown as { text: string } } }),
+    ).rejects.toMatchObject({ code: "invalid_record" });
+    const got = await server.get(id);
+    expect(Array.isArray(got.body)).toBe(false);
+    expect(got.body.text).toBe("hello");
+  });
+});
+
 describe("JsonFileStore", () => {
   it("persists records as portable UMP JSON", async () => {
     const dir = await mkdtemp(join(tmpdir(), "ump-store-"));

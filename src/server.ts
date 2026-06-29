@@ -162,6 +162,12 @@ export class UmpServer {
       superseded_by: [],
       integrity: undefined,
     };
+
+    // Validate the successor so a malformed patch (e.g. a list `body`) can't
+    // silently change the record shape returned by a subsequent `get`.
+    const problems = validateDraft({ ...draft, id: undefined });
+    if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
+
     const successor = this.finalize(draft);
     const successorId = (await this.store.put(successor)) || successor.id;
 
