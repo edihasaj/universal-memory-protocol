@@ -56,15 +56,3 @@ preserving portability, a small stable surface, and vendor-neutral interop.
 - Establish UMP as the memory interop layer alongside MCP and A2A.
 - Strengthen portability and trust: signed, user-owned memory and safe
   multi-agent sharing.
-
-## Autoreview Rules
-
-- Triage and label every open issue; ask for reproduction or detail when a report
-  is sparse.
-- Auto-build a PR only for **Merge by Default** changes (clear reference-impl bug
-  fixes, docs, tests, small DX). Open the PR with a `Fixes #N` closing keyword.
-- Escalate (label `needs: 🙋 maintainer`) anything in **Needs Sign-Off** —
-  protocol-surface changes, new bindings, breaking changes — and do not implement
-  it automatically.
-- Keep broad roadmap ideas open for manual triage rather than auto-implementing
-  scope expansions.
