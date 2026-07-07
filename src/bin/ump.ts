@@ -5,22 +5,27 @@
  *   ump memory [--http <port>] [--store json|markdown] [--dir <path>]
  *   ump serve  [--http <port>]
  *   ump import --owner <did> [--project <repo>] [--out <file>] <paths...>
+ *   ump audit  [--verify] [--op <op>] [--actor <did>] [--limit <n>] [--dir <path>]
  *   ump conformance <url> [--token <cap>]
  *   ump demo
  */
 
 import { readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   UmpServer,
   InMemoryStore,
+  JsonlAuditLog,
   createMcpServer,
   createHttpServer,
   generateKeyPair,
   rehydrate,
   file,
   importMemorySources,
+  type AuditLog,
+  type AuditOp,
   type ImportSource,
 } from "../index.ts";
 import { runConformance } from "../conformance.ts";
@@ -46,6 +51,7 @@ switch (cmd) {
   case "memory": await memory(); break;
   case "serve": await serve(); break;
   case "import": await runImport(); break;
+  case "audit": await audit(); break;
   case "conformance": await conformance(); break;
   case "demo": await demo(); break;
   default:
@@ -62,16 +68,52 @@ async function memory(): Promise<void> {
   const kind = (str(flags.store) ?? process.env.UMP_STORE ?? "json") as StoreKind;
   const key = loadOrCreateKey(dir);
   const { store, location } = await openStore(kind, dir);
+  const auditOn = process.env.UMP_AUDIT !== "off" && !flags["no-audit"];
+  const audit = auditOn
+    ? await JsonlAuditLog.open(join(dir, "audit.log.jsonl"), { key })
+    : undefined;
 
   const server = new UmpServer({
-    name: "ump-memory", version: VERSION, conformance: "L2", store, key,
+    name: "ump-memory", version: VERSION, conformance: "L2", store, key, audit,
   });
 
   const port = httpPort();
   if (port) createHttpServer(server, { wellKnown: { owner: key.did } }).listen(port, () => {});
 
-  summary("memory", { owner: key.did, data: location, store: kind, port });
+  summary("memory", { owner: key.did, data: location, store: kind, port, audit: auditOn });
   await createMcpServer(server).connect(new StdioServerTransport());
+}
+
+async function audit(): Promise<void> {
+  if (flags.help || flags.h) return printCommandHelp("audit");
+  const dir = resolveDir(str(flags.dir));
+  const log: AuditLog = await JsonlAuditLog.open(join(dir, "audit.log.jsonl"));
+
+  if (flags.verify) {
+    const v = await log.verify();
+    ui.note(`\n${ui.brand()}  ${ui.dim("audit verify")}\n`);
+    ui.note(
+      v.ok
+        ? `  ${ui.green(ui.bold(`chain intact - ${v.count} events`))}\n`
+        : `  ${ui.red(ui.bold(`BROKEN at seq ${v.brokenAt}: ${v.reason}`))}\n`,
+    );
+    process.exit(v.ok ? 0 : 1);
+  }
+
+  const events = await log.query({
+    op: str(flags.op) as AuditOp | undefined,
+    actor: str(flags.actor),
+    target: str(flags.target),
+    limit: flags.limit ? Number(str(flags.limit)) : 20,
+  });
+  ui.note(`\n${ui.brand()}  ${ui.dim("audit trail")} ${ui.gray(join(dir, "audit.log.jsonl"))}\n`);
+  if (events.length === 0) ui.note(`  ${ui.dim("no matching events")}\n`);
+  for (const e of events) {
+    const who = e.actor?.did ? ui.dim(short(e.actor.did)) : ui.gray("-");
+    const what = e.targets?.length ? ui.gray(e.targets.map(short).join(", ")) : "";
+    ui.note(`  ${ui.dim(String(e.seq).padStart(4))} ${e.ts}  ${ui.bold(e.op.padEnd(9))} ${who}  ${ui.dim(e.result ?? "")} ${what}`);
+  }
+  ui.note("");
 }
 
 async function serve(): Promise<void> {
@@ -159,6 +201,7 @@ function printHelp(): void {
       ["memory", "Persistent MCP memory server (~/.ump) - the install wedge"],
       ["serve", "Ephemeral in-memory reference server"],
       ["import", "Import AGENTS.md / CLAUDE.md / Markdown into UMP records"],
+      ["audit", "Inspect or verify the local audit trail (who did what)"],
       ["conformance", "Probe an endpoint and report its conformance level"],
       ["demo", "Run the cross-vendor round-trip"],
     ]) + "\n\n" +
@@ -181,6 +224,7 @@ function printCommandHelp(name: string): void {
     memory: "ump memory [--http <port>] [--store json|markdown] [--dir <path>]\n\nPersistent MCP memory server. Stable operator key + records under ~/.ump.\nEnv: UMP_DIR, UMP_STORE, UMP_HTTP.",
     serve: "ump serve [--http <port>]\n\nEphemeral in-memory reference server (nothing persisted).",
     import: "ump import --owner <did> [--project <repo>] [--kind agents|claude|recall|obsidian|generic_markdown] [--out <file>] <paths...>\n\nTranslate existing memory files into portable UMP records.",
+    audit: "ump audit [--verify] [--op <op>] [--actor <did>] [--target <id>] [--limit <n>] [--dir <path>]\n\nRead the append-only, hash-chained audit trail under ~/.ump. --verify checks chain + signature integrity.",
     conformance: "ump conformance <url> [--token <cap>]\n\nProbe a UMP HTTP endpoint and report the highest level it proves.",
   };
   process.stdout.write(`\n${ui.brand()}\n\n${help[name] ?? "ump " + name}\n\n`);
@@ -189,15 +233,25 @@ function printCommandHelp(name: string): void {
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
-function summary(mode: string, o: { owner: string; data: string; store: string; port?: number }): void {
+function summary(
+  mode: string,
+  o: { owner: string; data: string; store: string; port?: number; audit?: boolean },
+): void {
   const bindings = `MCP ${ui.dim("(stdio)")}` + (o.port ? `, HTTP ${ui.dim(":" + o.port)}` : "");
   ui.note(
     `\n${ui.brand()}  ${ui.dim(mode)}\n` +
     ui.row("owner", o.owner) + "\n" +
     ui.row("data", o.data) + "\n" +
     ui.row("store", o.store) + "\n" +
+    (o.audit === undefined ? "" : ui.row("audit", o.audit ? "on" : "off") + "\n") +
     ui.row("bindings", bindings) + "\n",
   );
+}
+
+/** Abbreviate a DID or urn:ump id for compact CLI display. */
+function short(id: string): string {
+  if (id.length <= 24) return id;
+  return `${id.slice(0, 16)}…${id.slice(-4)}`;
 }
 
 function httpPort(): number | undefined {

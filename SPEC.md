@@ -191,7 +191,8 @@ Negotiation handshake. No memory side effects.
   "bindings": ["mcp","http","file"],
   "retrieval_signals": ["similarity","recency","salience","scope_match","provenance_depth"],
   "max_recall": 50,
-  "writable": true
+  "writable": true,
+  "audit": true                 // OPTIONAL: server records an audit trail (§9)
 }
 ```
 
@@ -430,3 +431,65 @@ conformance suite ship with the reference implementation (see ADOPTION.md).
    optional `consolidate` op so any harness can trigger another's maintenance?
 4. **Decay**: keep as opaque hint, or define 2-3 named decay models for portability?
 5. **Naming/governance**: final name, steward, and license (see ADOPTION.md §5).
+
+---
+
+## 9. Audit trail (OPTIONAL)
+
+Per-record `provenance` (§2.6) captures who *authored* a memory; it cannot capture
+who *read* one, or reconstruct the ordered sequence of operations against a store.
+The audit trail closes that gap. It is an OPTIONAL capability - not required by any
+conformance level, RECOMMENDED at L3 - and is deliberately kept **out of the
+Memory Record**: enabling it never changes the record shape or the output of the
+six operations. A server advertises it with `capabilities.audit: true`.
+
+### 9.1 Audit event
+
+An append-only, hash-chained log of one event per operation:
+
+```jsonc
+{
+  "ump": "0.1",
+  "seq": 12,                              // 1-based monotonic position
+  "ts": "2026-06-04T10:00:00Z",           // when appended
+  "op": "recall",                         // recall|remember|get|revise|forget|feedback
+  "actor": { "did": "did:key:z6Mk…", "kind": "agent" },  // who performed it
+  "targets": ["urn:ump:9f2c…"],           // records written or returned by a read
+  "scope": { "owner": "did:key:z6Mk…", "project": "…/app" },
+  "result": "1 hits",                     // op outcome
+  "meta": { "query": "package manager", "count": 1 },    // op-specific detail
+  "prev": "blake3:4a…",                   // hash of event seq-1 (null at genesis)
+  "hash": "blake3:7c…",                   // BLAKE3 of the canonical event minus hash/signature
+  "signature": "ed25519:…",               // OPTIONAL operator signature over hash
+  "signer": "did:key:z6Mk…"
+}
+```
+
+The `hash` is computed over the JCS-canonical event (§6.1) excluding `hash` and
+`signature`, then BLAKE3 (§6.2). Each event's `prev` is the previous event's
+`hash`, so any insertion, deletion, or edit breaks the chain. When signed, each
+`hash` is additionally Ed25519-signed by the operator key (§2.8), making the log
+tamper-evident **and** attributable.
+
+### 9.2 Actor identity
+
+Every operation MAY carry an `actor` (`{ did, kind }`). A conforming server SHOULD
+derive the acting principal from the verified capability token (§5.2) rather than
+trust a caller-supplied value; the reference server accepts a caller-supplied
+`actor` for deployments without capability enforcement. A `revise` or `forget`
+performed by a known actor SHOULD stamp that actor into the successor/tombstone
+`provenance`, so record lineage and the audit log agree on who changed what.
+
+### 9.3 Operations
+
+Two read-only operations, available only when auditing is enabled:
+
+| Operation | Purpose |
+| --- | --- |
+| `audit` | Query events by `op`, `actor`, `target`, `owner`/`project`, and time window. |
+| `audit.verify` | Recompute the hash chain (and signatures) end to end; report the first break. |
+
+Bindings: MCP exposes `ump.audit` / `ump.audit.verify` tools; HTTP exposes
+`POST /ump/audit` and `GET /ump/audit/verify`. Reading the trail is a privileged
+`read` on the owner scope. The log backend (memory, appended file, database, or an
+external SIEM) is an implementation choice, exactly like the `MemoryStore`.

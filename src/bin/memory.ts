@@ -13,6 +13,7 @@
  *   UMP_DIR   data directory            (default: ~/.ump)
  *   UMP_STORE json | markdown           (default: json)
  *   UMP_HTTP  also serve HTTP on a port (default: off; stdio only)
+ *   UMP_AUDIT on | off                  (default: on; signed audit trail §9)
  */
 
 import { homedir } from "node:os";
@@ -22,6 +23,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   UmpServer,
   JsonFileStore,
+  JsonlAuditLog,
   MarkdownDirectoryStore,
   createMcpServer,
   createHttpServer,
@@ -31,6 +33,7 @@ import {
 
 const dir = process.env.UMP_DIR || join(homedir(), ".ump");
 const storeKind = process.env.UMP_STORE || "json";
+const auditOn = process.env.UMP_AUDIT !== "off";
 mkdirSync(dir, { recursive: true });
 
 const key = loadOrCreateKey(join(dir, "key.json"));
@@ -39,12 +42,18 @@ const store =
     ? await MarkdownDirectoryStore.open(join(dir, "memory.d"))
     : await JsonFileStore.open(join(dir, "memory.ump.json"));
 
+// Signed, hash-chained audit trail (SPEC §9). Disable with UMP_AUDIT=off.
+const audit = auditOn
+  ? await JsonlAuditLog.open(join(dir, "audit.log.jsonl"), { key })
+  : undefined;
+
 const server = new UmpServer({
   name: "ump-memory",
   version: "0.1.0",
   conformance: "L2",
   store,
   key,
+  audit,
 });
 
 const httpPort = process.env.UMP_HTTP ? Number(process.env.UMP_HTTP) : undefined;
@@ -56,7 +65,7 @@ if (httpPort) {
 
 await createMcpServer(server).connect(new StdioServerTransport());
 log(`MCP binding on stdio`);
-log(`data ${dir}  store ${storeKind}  owner ${key.did}`);
+log(`data ${dir}  store ${storeKind}  audit ${audit ? "on" : "off"}  owner ${key.did}`);
 
 /** Load the operator key seed from disk, or create and persist a new one. */
 function loadOrCreateKey(path: string): KeyPair {

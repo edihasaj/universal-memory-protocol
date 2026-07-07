@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Audit trail (SPEC §9, optional).** An append-only, hash-chained, optionally
+  signed log of every operation - reads included - queryable by op, actor, target,
+  scope, and time. Kept separate from the Memory Record, so enabling it never
+  changes the record shape. New `AuditLog` interface with `InMemoryAuditLog` and
+  file-backed `JsonlAuditLog`; `UmpServer` gains `audit()` / `verifyAudit()`.
+- Operations now accept an optional `actor`; `revise`/`forget` stamp the acting
+  principal into the successor/tombstone `provenance` so lineage and the audit log
+  agree on who changed what.
+- Bindings: MCP `ump.audit` / `ump.audit.verify` tools; HTTP `POST /ump/audit` and
+  `GET /ump/audit/verify`; `ump audit [--verify]` CLI. `ump-memory` enables a
+  signed trail at `~/.ump/audit.log.jsonl` by default (`UMP_AUDIT=off` to disable).
+- `signHash` / `verifyHash` helpers shared by record and audit signing.
+
 ## 0.1.0 - draft (unreleased)
 
 First cut of the Universal Memory Protocol: spec + working L3 reference implementation.

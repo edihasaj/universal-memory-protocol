@@ -6,6 +6,7 @@
  *   POST /ump/recall      POST /ump/remember     GET  /ump/memory/{id}
  *   POST /ump/revise      POST /ump/forget       POST /ump/feedback
  *   GET  /ump/subscribe   (Server-Sent Events stream of record changes)
+ *   POST /ump/audit       GET  /ump/audit/verify  (audit trail, SPEC §9)
  *
  * Capability tokens (§5.2) are enforced when `requireCapability` is set:
  * a verb is derived per route and checked against the bearer token's grant.
@@ -57,9 +58,15 @@ export function createHttpHandler(server: UmpServer, opts: HttpBindingOptions = 
         return streamSubscribe(server, res, scopeFromQuery(url));
       }
 
+      // Audit trail (SPEC §9): read-only chain verification + query.
+      if (method === "GET" && path === "/ump/audit/verify") {
+        capGate(opts, "read", { owner: url.searchParams.get("owner") ?? undefined }, token);
+        return send(res, 200, await server.verifyAudit());
+      }
+
       if (method === "GET" && path.startsWith("/ump/memory/")) {
         const id = decodeURIComponent(path.slice("/ump/memory/".length));
-        const record = await server.get(id);
+        const record = await server.peek(id);
         const claims = capGate(opts, "read", record.scope, token);
         return send(res, 200, { record: await server.get(id, claims?.scope) });
       }
@@ -74,20 +81,23 @@ export function createHttpHandler(server: UmpServer, opts: HttpBindingOptions = 
             capGate(opts, "write", (body.record ?? body)?.scope ?? {}, token);
             return send(res, 200, await server.remember(body.record ?? body));
           case "/ump/revise": {
-            const record = await server.get(body.id);
+            const record = await server.peek(body.id);
             capGate(opts, "write", record.scope, token);
             return send(res, 200, await server.revise(body));
           }
           case "/ump/forget": {
-            const record = await server.get(body.id);
+            const record = await server.peek(body.id);
             capGate(opts, "write", record.scope, token);
             return send(res, 200, await server.forget(body));
           }
           case "/ump/feedback": {
-            const record = await server.get(body.id);
+            const record = await server.peek(body.id);
             capGate(opts, "derive", record.scope, token);
             return send(res, 200, await server.feedback(body));
           }
+          case "/ump/audit":
+            capGate(opts, "read", { owner: body.owner }, token);
+            return send(res, 200, { events: await server.audit(body) });
         }
       }
       return send(res, 404, { error: { code: "not_found", message: "no route" } });

@@ -152,5 +152,29 @@ function toolDefs(ump: UmpServer): ToolDef[] {
       ),
       handler: async (a) => ump.feedback(a),
     },
+    {
+      name: "ump.audit",
+      description:
+        "Query the audit trail: who did what, to which records, when. Filter by " +
+        "op, actor, target id, owner/project, and time window. Requires auditing enabled.",
+      inputSchema: obj({
+        op: { type: ["string", "array"] },
+        actor: str,
+        target: str,
+        owner: str,
+        project: str,
+        since: str,
+        until: str,
+        limit: { type: "number" },
+      }),
+      handler: async (a) => ({ events: await ump.audit(a) }),
+    },
+    {
+      name: "ump.audit.verify",
+      description:
+        "Verify the audit trail's hash chain (and signatures) end to end; reports the first break.",
+      inputSchema: obj({}),
+      handler: async () => ump.verifyAudit(),
+    },
   ];
 }
