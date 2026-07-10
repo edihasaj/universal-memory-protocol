@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-07-11
+
 ### Added
 - **`revise`/`forget` actor attribution (protocol/provenance).** These operations
   now accept an optional `actor` and stamp the acting principal into the
