@@ -19,8 +19,10 @@ export type MemoryStatus = "active" | "candidate" | "tombstoned";
 export type ActorKind = "user" | "agent" | "model" | "import" | "scan";
 
 /**
- * Who is performing an operation, for the audit trail (SPEC §9). Optional on
- * every op. In a hardened deployment the server derives this from the verified
+ * Who is performing an operation. Optional on every op. Used to attribute a
+ * `revise`/`forget` in the record's `provenance` (the portable, in-protocol
+ * attribution) and, where a server keeps one, its operation log (SPEC §9,
+ * non-normative). A hardened deployment derives this from the verified
  * capability token (§5.2) rather than trusting a caller-supplied value.
  */
 export interface AuditActor {

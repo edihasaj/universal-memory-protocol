@@ -1,14 +1,19 @@
 /**
- * Audit trail (SPEC §9) - an append-only, hash-chained log of every operation
- * performed against a UMP server: who did what, to which records, when.
+ * Operation audit log - a reference-server facility, NOT a UMP protocol operation
+ * (SPEC §9 is non-normative). An append-only, hash-chained log of every operation
+ * performed against a server: who did what, to which records, when.
+ *
+ * The protocol's portable attribution is the record's `provenance` (§2.6); this
+ * log additionally captures *reads* and call ordering, which provenance cannot.
+ * It is server-local and does not travel with an exported record.
  *
  * Design goals, in priority order:
- *  1. Generic. The `AuditLog` interface is what UMP standardizes; the backing
- *     store (memory, file, Postgres, an external SIEM) is an implementation
- *     choice, exactly like `MemoryStore`.
- *  2. Separate from the record. Audit events live in their own log, so adding
- *     auditing never changes the Memory Record shape or the six operations'
- *     output. Enable it or don't; the wire format is identical either way.
+ *  1. Generic. `AuditLog` is a swappable interface; the backing store (memory,
+ *     file, Postgres, an external SIEM) is an implementation choice, exactly like
+ *     `MemoryStore`.
+ *  2. Separate from the record. Audit events live in their own log, so keeping
+ *     one never changes the Memory Record shape or the six operations' output.
+ *     Enable it or don't; the portable wire format is identical either way.
  *  3. Tamper-evident. Each event carries the hash of its predecessor (a chain),
  *     so any insertion, deletion, or edit breaks `verify()`. Optionally each
  *     event is Ed25519-signed by the operator key, like records.

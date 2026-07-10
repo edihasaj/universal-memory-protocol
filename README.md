@@ -185,13 +185,17 @@ Run the conformance probe against an HTTP endpoint:
 pnpm conformance http://localhost:4000
 ```
 
-## Audit Trail
+## Audit Trail (reference-server facility)
 
-Provenance records who *wrote* a memory; the audit trail records everything that
-*happens* to it - reads included. It is an optional, append-only, hash-chained log
-of every operation (who, what, which records, when), kept separate from the record
-so enabling it never changes the record shape. Each event links to the previous by
-hash and is signed by the operator key, so any edit, insertion, or deletion is
+The *protocol's* attribution lives in each record's `provenance` (who authored a
+memory, how) - it travels with the record across tools. Recording *operations*
+against a store (who *read* a memory, the ordered sequence of calls) is a property
+of a running server, not of portable memory, so UMP leaves it to implementations -
+the same way it leaves ranking and storage to implementations. It is **not** a UMP
+operation and does not affect conformance (see [SPEC §9, non-normative](./SPEC.md#9-operation-auditing-non-normative)).
+
+The reference server ships one so you get it for free: an append-only,
+hash-chained, optionally signed log where any edit, insertion, or deletion is
 detectable. `ump-memory` turns it on by default (`UMP_AUDIT=off` to disable).
 
 ```bash
@@ -200,9 +204,11 @@ ump audit --op forget     # filter by operation, --actor <did>, --target <id>
 ump audit --verify        # recompute the hash chain end to end
 ```
 
-Same over the bindings: MCP tools `ump.audit` / `ump.audit.verify`, HTTP
-`POST /ump/audit` and `GET /ump/audit/verify`. The log backend (file, database,
-external SIEM) is swappable behind the `AuditLog` interface - see [SPEC §9](./SPEC.md#9-audit-trail-optional).
+Also over the reference bindings when enabled: MCP tools `ump.audit` /
+`ump.audit.verify`, HTTP `POST /ump/audit` and `GET /ump/audit/verify`. The backend
+(file, database, external SIEM) is swappable behind the `AuditLog` interface.
+Note the log is server-local: it does **not** travel with an exported record - if
+you need attribution to move with the memory, that is `provenance`.
 
 ## Store Implementations
 

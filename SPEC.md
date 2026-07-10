@@ -192,7 +192,7 @@ Negotiation handshake. No memory side effects.
   "retrieval_signals": ["similarity","recency","salience","scope_match","provenance_depth"],
   "max_recall": 50,
   "writable": true,
-  "audit": true                 // OPTIONAL: server records an audit trail (§9)
+  "audit": true                 // non-normative: server offers an audit facility (§9)
 }
 ```
 
@@ -434,62 +434,32 @@ conformance suite ship with the reference implementation (see ADOPTION.md).
 
 ---
 
-## 9. Audit trail (OPTIONAL)
+## 9. Operation auditing (non-normative)
 
-Per-record `provenance` (§2.6) captures who *authored* a memory; it cannot capture
-who *read* one, or reconstruct the ordered sequence of operations against a store.
-The audit trail closes that gap. It is an OPTIONAL capability - not required by any
-conformance level, RECOMMENDED at L3 - and is deliberately kept **out of the
-Memory Record**: enabling it never changes the record shape or the output of the
-six operations. A server advertises it with `capabilities.audit: true`.
+This section is **non-normative**. Auditing is an *implementation* concern, like
+the retrieval algorithm (§3.2) and the store backend (§2.4): UMP does not define
+audit operations, an audit wire format, or an audit conformance requirement.
+Nothing here changes the record, the six operations, or any conformance level.
 
-### 9.1 Audit event
+**What is in the protocol** is `provenance` (§2.6): the portable, in-record record
+of *who authored a memory, how*. Because provenance travels inside the record, it
+survives export and crosses vendors - that is UMP's attribution guarantee. A
+`revise` or `forget` MAY stamp the acting principal into the successor/tombstone
+`provenance`, so record lineage stays attributable across tools.
 
-An append-only, hash-chained log of one event per operation:
+**What is out of the protocol** is a log of *operations* against a store - who
+*read* a memory, and the ordered sequence of calls over time. Provenance cannot
+express that; it is answered by a server-side operation log. Such a log is a
+property of a running server, not of the portable memory, so it is left to
+implementations - the same way UMP leaves ranking and storage to implementations.
 
-```jsonc
-{
-  "ump": "0.1",
-  "seq": 12,                              // 1-based monotonic position
-  "ts": "2026-06-04T10:00:00Z",           // when appended
-  "op": "recall",                         // recall|remember|get|revise|forget|feedback
-  "actor": { "did": "did:key:z6Mk…", "kind": "agent" },  // who performed it
-  "targets": ["urn:ump:9f2c…"],           // records written or returned by a read
-  "scope": { "owner": "did:key:z6Mk…", "project": "…/app" },
-  "result": "1 hits",                     // op outcome
-  "meta": { "query": "package manager", "count": 1 },    // op-specific detail
-  "prev": "blake3:4a…",                   // hash of event seq-1 (null at genesis)
-  "hash": "blake3:7c…",                   // BLAKE3 of the canonical event minus hash/signature
-  "signature": "ed25519:…",               // OPTIONAL operator signature over hash
-  "signer": "did:key:z6Mk…"
-}
-```
+The reference implementation ships one such facility so operators get it for free:
+an append-only, hash-chained, optionally operator-signed log, queryable via the
+`ump.audit` / `ump.audit.verify` MCP tools and the `POST /ump/audit` /
+`GET /ump/audit/verify` HTTP routes, behind a swappable `AuditLog` interface
+(memory, appended file, or a database). Servers that offer it MAY advertise
+`capabilities.audit: true`. See the reference docs, not this spec, for its shape.
 
-The `hash` is computed over the JCS-canonical event (§6.1) excluding `hash` and
-`signature`, then BLAKE3 (§6.2). Each event's `prev` is the previous event's
-`hash`, so any insertion, deletion, or edit breaks the chain. When signed, each
-`hash` is additionally Ed25519-signed by the operator key (§2.8), making the log
-tamper-evident **and** attributable.
-
-### 9.2 Actor identity
-
-Every operation MAY carry an `actor` (`{ did, kind }`). A conforming server SHOULD
-derive the acting principal from the verified capability token (§5.2) rather than
-trust a caller-supplied value; the reference server accepts a caller-supplied
-`actor` for deployments without capability enforcement. A `revise` or `forget`
-performed by a known actor SHOULD stamp that actor into the successor/tombstone
-`provenance`, so record lineage and the audit log agree on who changed what.
-
-### 9.3 Operations
-
-Two read-only operations, available only when auditing is enabled:
-
-| Operation | Purpose |
-| --- | --- |
-| `audit` | Query events by `op`, `actor`, `target`, `owner`/`project`, and time window. |
-| `audit.verify` | Recompute the hash chain (and signatures) end to end; report the first break. |
-
-Bindings: MCP exposes `ump.audit` / `ump.audit.verify` tools; HTTP exposes
-`POST /ump/audit` and `GET /ump/audit/verify`. Reading the trail is a privileged
-`read` on the owner scope. The log backend (memory, appended file, database, or an
-external SIEM) is an implementation choice, exactly like the `MemoryStore`.
+*Caveat, by design:* an operation log is **server-local and does not travel** with
+an exported record. If you need attribution to move with the memory, that lives in
+`provenance`, not the log.

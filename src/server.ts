@@ -58,7 +58,8 @@ export interface UmpServerOptions {
   /** Feedback sink (e.g. learning engine). */
   onFeedback?: (req: FeedbackRequest) => void | Promise<void>;
   /**
-   * Optional append-only audit log (SPEC §9). When set, every operation - reads
+   * Optional operation audit log - a reference-server facility, not a UMP
+   * operation (SPEC §9, non-normative). When set, every operation - reads
    * included - is recorded as a hash-chained event queryable via `audit()`.
    */
   audit?: AuditLog;
