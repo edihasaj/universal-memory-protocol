@@ -54,14 +54,36 @@ export function contentHash(record: MemoryRecord): string {
   return "blake3:" + base32nopad.encode(blake3(bytes)).toLowerCase();
 }
 
+/**
+ * Sign an arbitrary hash string with the operator key. Returns an
+ * `ed25519:<base64>` signature over BLAKE3(hash). Shared by record signing
+ * (below) and the audit log, so both use one identity and one scheme.
+ */
+export function signHash(hash: string, key: KeyPair): string {
+  const digest = blake3(new TextEncoder().encode(hash));
+  return "ed25519:" + base64.encode(ed25519.sign(digest, key.privateKey));
+}
+
+/** Verify an `ed25519:<base64>` signature over a hash string against a did:key. */
+export function verifyHash(hash: string, signature: string, signer: string): boolean {
+  const m = /^ed25519:(.+)$/.exec(signature);
+  if (!m) return false;
+  try {
+    const sig = base64.decode(m[1]!);
+    const pub = publicKeyFromDidKey(signer);
+    const digest = blake3(new TextEncoder().encode(hash));
+    return ed25519.verify(sig, digest, pub);
+  } catch {
+    return false;
+  }
+}
+
 /** Sign a record: compute content hash, sign it, attach `integrity`. */
 export function sign(record: MemoryRecord, key: KeyPair): MemoryRecord {
   const hash = contentHash(record);
-  const digest = blake3(new TextEncoder().encode(hash));
-  const sig = ed25519.sign(digest, key.privateKey);
   const integrity: Integrity = {
     content_hash: hash,
-    signature: "ed25519:" + base64.encode(sig),
+    signature: signHash(hash, key),
     signer: key.did,
   };
   return { ...record, integrity };
@@ -72,15 +94,5 @@ export function verify(record: MemoryRecord): boolean {
   const { integrity } = record;
   if (!integrity) return false;
   if (contentHash(record) !== integrity.content_hash) return false;
-
-  const m = /^ed25519:(.+)$/.exec(integrity.signature);
-  if (!m) return false;
-  try {
-    const sig = base64.decode(m[1]!);
-    const pub = publicKeyFromDidKey(integrity.signer);
-    const digest = blake3(new TextEncoder().encode(integrity.content_hash));
-    return ed25519.verify(sig, digest, pub);
-  } catch {
-    return false;
-  }
+  return verifyHash(integrity.content_hash, integrity.signature, integrity.signer);
 }

@@ -73,6 +73,37 @@ function toolDefs(ump: UmpServer): ToolDef[] {
   });
   const str = { type: "string" } as const;
 
+  // The audit tools are a reference-server facility (SPEC §9, non-normative),
+  // not UMP operations - only surface them when this server actually keeps a log.
+  const auditTools: ToolDef[] = ump.capabilities().audit
+    ? [
+        {
+          name: "ump.audit",
+          description:
+            "Query the reference server's operation log: who did what, to which " +
+            "records, when. Filter by op, actor, target id, owner/project, and time window.",
+          inputSchema: obj({
+            op: { type: ["string", "array"] },
+            actor: str,
+            target: str,
+            owner: str,
+            project: str,
+            since: str,
+            until: str,
+            limit: { type: "number" },
+          }),
+          handler: async (a) => ({ events: await ump.audit(a) }),
+        },
+        {
+          name: "ump.audit.verify",
+          description:
+            "Verify the operation log's hash chain (and signatures) end to end; reports the first break.",
+          inputSchema: obj({}),
+          handler: async () => ump.verifyAudit(),
+        },
+      ]
+    : [];
+
   return [
     {
       name: "ump.capabilities",
@@ -152,5 +183,6 @@ function toolDefs(ump: UmpServer): ToolDef[] {
       ),
       handler: async (a) => ump.feedback(a),
     },
+    ...auditTools,
   ];
 }

@@ -45,6 +45,19 @@ export {
   type ChangeEvent,
   type ChangeListener,
 } from "./server.ts";
+export {
+  InMemoryAuditLog,
+  auditHash,
+  type AuditLog,
+  type AuditLogOptions,
+  type AuditEvent,
+  type AuditEntry,
+  type AuditOp,
+  type AuditActor,
+  type AuditQuery,
+  type AuditVerification,
+} from "./audit.ts";
+export { JsonlAuditLog } from "./audit-file.ts";
 export { rehydrate, type RehydrateOptions } from "./rehydrate.ts";
 export { validateDraft, isValidDraft } from "./validate.ts";
 export {

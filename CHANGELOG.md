@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **`revise`/`forget` actor attribution (protocol/provenance).** These operations
+  now accept an optional `actor` and stamp the acting principal into the
+  successor/tombstone `provenance`, so record lineage stays attributable across
+  tools. Provenance is the portable, in-record attribution UMP guarantees.
+- **Operation audit log (reference-server facility, non-normative).** The
+  reference server ships an optional append-only, hash-chained, optionally signed
+  log of every operation - reads included - queryable by op, actor, target, scope,
+  and time. It is **not** a UMP operation and does not affect conformance (see
+  SPEC §9): it is server-local and does not travel with exported records.
+  - `AuditLog` interface with `InMemoryAuditLog` and file-backed `JsonlAuditLog`;
+    `UmpServer` gains `audit()` / `verifyAudit()` / non-logging `peek()`.
+  - Exposed only when enabled: MCP `ump.audit` / `ump.audit.verify` tools, HTTP
+    `POST /ump/audit` and `GET /ump/audit/verify`, `ump audit [--verify]` CLI.
+    `ump-memory` enables it at `~/.ump/audit.log.jsonl` by default (`UMP_AUDIT=off`).
+- `signHash` / `verifyHash` helpers shared by record and audit signing.
+
 ## 0.1.0 - draft (unreleased)
 
 First cut of the Universal Memory Protocol: spec + working L3 reference implementation.

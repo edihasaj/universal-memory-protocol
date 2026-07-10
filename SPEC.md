@@ -191,7 +191,8 @@ Negotiation handshake. No memory side effects.
   "bindings": ["mcp","http","file"],
   "retrieval_signals": ["similarity","recency","salience","scope_match","provenance_depth"],
   "max_recall": 50,
-  "writable": true
+  "writable": true,
+  "audit": true                 // non-normative: server offers an audit facility (§9)
 }
 ```
 
@@ -430,3 +431,35 @@ conformance suite ship with the reference implementation (see ADOPTION.md).
    optional `consolidate` op so any harness can trigger another's maintenance?
 4. **Decay**: keep as opaque hint, or define 2-3 named decay models for portability?
 5. **Naming/governance**: final name, steward, and license (see ADOPTION.md §5).
+
+---
+
+## 9. Operation auditing (non-normative)
+
+This section is **non-normative**. Auditing is an *implementation* concern, like
+the retrieval algorithm (§3.2) and the store backend (§2.4): UMP does not define
+audit operations, an audit wire format, or an audit conformance requirement.
+Nothing here changes the record, the six operations, or any conformance level.
+
+**What is in the protocol** is `provenance` (§2.6): the portable, in-record record
+of *who authored a memory, how*. Because provenance travels inside the record, it
+survives export and crosses vendors - that is UMP's attribution guarantee. A
+`revise` or `forget` MAY stamp the acting principal into the successor/tombstone
+`provenance`, so record lineage stays attributable across tools.
+
+**What is out of the protocol** is a log of *operations* against a store - who
+*read* a memory, and the ordered sequence of calls over time. Provenance cannot
+express that; it is answered by a server-side operation log. Such a log is a
+property of a running server, not of the portable memory, so it is left to
+implementations - the same way UMP leaves ranking and storage to implementations.
+
+The reference implementation ships one such facility so operators get it for free:
+an append-only, hash-chained, optionally operator-signed log, queryable via the
+`ump.audit` / `ump.audit.verify` MCP tools and the `POST /ump/audit` /
+`GET /ump/audit/verify` HTTP routes, behind a swappable `AuditLog` interface
+(memory, appended file, or a database). Servers that offer it MAY advertise
+`capabilities.audit: true`. See the reference docs, not this spec, for its shape.
+
+*Caveat, by design:* an operation log is **server-local and does not travel** with
+an exported record. If you need attribution to move with the memory, that lives in
+`provenance`, not the log.

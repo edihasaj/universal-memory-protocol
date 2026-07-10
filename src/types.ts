@@ -18,6 +18,18 @@ export type MemoryStatus = "active" | "candidate" | "tombstoned";
 
 export type ActorKind = "user" | "agent" | "model" | "import" | "scan";
 
+/**
+ * Who is performing an operation. Optional on every op. Used to attribute a
+ * `revise`/`forget` in the record's `provenance` (the portable, in-protocol
+ * attribution) and, where a server keeps one, its operation log (SPEC §9,
+ * non-normative). A hardened deployment derives this from the verified
+ * capability token (§5.2) rather than trusting a caller-supplied value.
+ */
+export interface AuditActor {
+  did?: string;
+  kind?: ActorKind;
+}
+
 export interface MemoryBody {
   text: string;
   /** Optional machine-readable payload. */
@@ -131,6 +143,8 @@ export interface Capabilities {
   retrieval_signals: string[];
   max_recall: number;
   writable: boolean;
+  /** True when the server records an audit trail queryable via `audit` (§9). */
+  audit?: boolean;
 }
 
 export interface RecallRequest {
@@ -139,6 +153,8 @@ export interface RecallRequest {
   filter?: { kind?: MemoryKind[]; valid_at?: string; status?: MemoryStatus[] };
   limit?: number;
   ranking_hints?: { prefer?: string[] };
+  /** Who is performing this read, for the audit trail (§9). */
+  actor?: AuditActor;
 }
 
 export interface RecallResult {
@@ -162,6 +178,9 @@ export interface ReviseRequest {
   patch: Partial<Pick<MemoryRecord, "body" | "lifecycle" | "relations">> & {
     time?: Partial<MemoryTime>;
   };
+  /** Who is performing this revision; stamped into the successor's provenance
+   * and the audit trail (§9). */
+  actor?: AuditActor;
 }
 
 export interface ReviseResponse {
@@ -174,6 +193,8 @@ export interface ForgetRequest {
   reason: string;
   /** Owner-only hard erasure. Default false = tombstone + retain for audit. */
   hard?: boolean;
+  /** Who is performing this forget; recorded in the audit trail (§9). */
+  actor?: AuditActor;
 }
 
 export type FeedbackOutcome =
@@ -186,6 +207,8 @@ export interface FeedbackRequest {
   id: string;
   outcome: FeedbackOutcome;
   session?: string;
+  /** Who is reporting this outcome; recorded in the audit trail (§9). */
+  actor?: AuditActor;
 }
 
 export type UmpErrorCode =
