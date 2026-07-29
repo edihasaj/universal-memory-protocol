@@ -1,4 +1,4 @@
-/** Universal Memory Protocol - reference SDK (UMP 0.1). */
+/** Universal Memory Protocol - reference SDK (UMP 1.0). */
 
 export * from "./types.ts";
 export { canonicalize } from "./canonical.ts";

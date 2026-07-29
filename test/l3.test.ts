@@ -18,7 +18,7 @@ const fixed = () => new Date("2026-06-04T10:00:00Z");
 
 function server(opts: { sign?: boolean } = {}) {
   return new UmpServer({
-    name: "ump-ref", version: "0.1.0", store: new InMemoryStore(),
+    name: "ump-ref", version: "1.0.0", store: new InMemoryStore(),
     now: fixed, key: opts.sign ? OWNER : undefined,
   });
 }
@@ -152,7 +152,7 @@ describe("conformance runner (SPEC §7)", () => {
       const failed = report.checks.filter((c) => !c.ok);
       expect(failed, JSON.stringify(failed, null, 2)).toEqual([]);
       expect(report.level).toBe("L3");
-      expect(report.badge).toBe("UMP 0.1 / L3");
+      expect(report.badge).toBe("UMP 1.0 / L3");
     } finally {
       http.close();
     }

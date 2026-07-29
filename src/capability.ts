@@ -16,9 +16,14 @@ import { publicKeyFromDidKey, type KeyPair } from "./integrity.ts";
 import type { MemoryScope } from "./types.ts";
 
 export type CapabilityVerb = "read" | "write" | "derive" | "export";
+export const CAPABILITY_VERSION = "ump-cap/1.0" as const;
+export const LEGACY_CAPABILITY_VERSIONS = ["ump-cap/0.1"] as const;
+type CapabilityVersion =
+  | typeof CAPABILITY_VERSION
+  | (typeof LEGACY_CAPABILITY_VERSIONS)[number];
 
 export interface CapabilityClaims {
-  v: "ump-cap/0.1";
+  v: CapabilityVersion;
   /** Issuer = owner DID (the signer). */
   iss: string;
   /** Optional audience DID this token is minted for. */
@@ -47,7 +52,7 @@ export function mintCapability(
   },
 ): string {
   const claims: CapabilityClaims = {
-    v: "ump-cap/0.1",
+    v: CAPABILITY_VERSION,
     iss: key.did,
     aud: grant.aud,
     verbs: grant.verbs,
@@ -82,6 +87,14 @@ export function verifyCapability(token: string, now: Date = new Date()): VerifyR
     claims = JSON.parse(new TextDecoder().decode(base64urlnopad.decode(payload!)));
   } catch {
     return { valid: false, reason: "bad_payload" };
+  }
+  if (
+    claims.v !== CAPABILITY_VERSION &&
+    !LEGACY_CAPABILITY_VERSIONS.includes(
+      claims.v as (typeof LEGACY_CAPABILITY_VERSIONS)[number],
+    )
+  ) {
+    return { valid: false, reason: "unsupported_version" };
   }
   try {
     const digest = blake3(utf8(payload!));

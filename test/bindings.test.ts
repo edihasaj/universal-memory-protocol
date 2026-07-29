@@ -8,6 +8,7 @@ import {
   JsonFileStore,
   createMcpServer,
   createHttpHandler,
+  file,
 } from "../src/index.ts";
 
 function srv() {
@@ -36,7 +37,7 @@ describe("HTTP binding (SPEC §4.2)", () => {
     await handler(req as any, res as any);
     expect(res.statusCode).toBe(200);
     const json = JSON.parse(body());
-    expect(json.ump).toBe("0.1");
+    expect(json.ump).toBe("1.0");
     expect(json.conformance).toBe("L1");
     expect(json.bindings).toContain("mcp");
   });
@@ -82,6 +83,30 @@ describe("revise (SPEC §3) preserves record body shape", () => {
 });
 
 describe("JsonFileStore", () => {
+  it("upgrades UMP 0.1 portable records to canonical UMP 1.0 on import", () => {
+    const legacy = {
+      ump: "0.1",
+      id: "urn:ump:legacy",
+      kind: "semantic",
+      body: { text: "portable legacy memory" },
+      scope: { owner: "did:key:zOwner", visibility: "private" },
+      time: { created: "2026-06-04T10:00:00Z" },
+    };
+    expect(file.fromJson(JSON.stringify([legacy]))[0]?.ump).toBe("1.0");
+  });
+
+  it("rejects unknown protocol versions", () => {
+    const unknown = {
+      ump: "2.0",
+      id: "urn:ump:future",
+      kind: "semantic",
+      body: { text: "future memory" },
+      scope: { owner: "did:key:zOwner", visibility: "private" },
+      time: { created: "2026-06-04T10:00:00Z" },
+    };
+    expect(() => file.fromJson(JSON.stringify([unknown]))).toThrow(/unsupported version 2\.0/);
+  });
+
   it("persists records as portable UMP JSON", async () => {
     const dir = await mkdtemp(join(tmpdir(), "ump-store-"));
     try {

@@ -2,7 +2,7 @@
 
 > Portable memory for AI agents. Teach one tool, recall it in the next.
 
-**Status:** Live v0.1 · **Site:** <https://universalmemoryprotocol.io> · **Package:** [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core) · **Bindings:** MCP, HTTP, file export
+**Status:** Stable v1.0 · **Site:** <https://universalmemoryprotocol.io> · **Package:** [`@universalmemoryprotocol/core`](https://www.npmjs.com/package/@universalmemoryprotocol/core) · **Bindings:** MCP, HTTP, file export
 
 Your AI tools learn things - that this repo uses pnpm, that you like terse release
 notes, the gotcha that bit you last week - then lose all of it the moment you

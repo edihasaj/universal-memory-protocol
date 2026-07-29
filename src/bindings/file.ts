@@ -8,7 +8,12 @@
  * YAML dependency while staying human- and Obsidian-readable.
  */
 
-import { UMP_VERSION, type Consent, type MemoryRecord } from "../types.ts";
+import {
+  UMP_VERSION,
+  isSupportedUmpVersion,
+  type Consent,
+  type MemoryRecord,
+} from "../types.ts";
 import { redactRecord } from "../policy.ts";
 
 // ── JSON array binding ──────────────────────────────────────────────────
@@ -74,11 +79,13 @@ export function exportRecords(records: MemoryRecord[]): MemoryRecord[] {
 function assertRecord(v: unknown): MemoryRecord {
   const r = v as MemoryRecord;
   if (!r || typeof r !== "object") throw new Error("ump: not an object");
-  if (r.ump !== UMP_VERSION) throw new Error(`ump: version != ${UMP_VERSION}`);
+  if (!isSupportedUmpVersion(r.ump)) {
+    throw new Error(`ump: unsupported version ${String(r.ump)}`);
+  }
   if (!r.id || !r.kind || !r.body?.text || !r.scope?.owner) {
     throw new Error("ump: missing required field (id/kind/body.text/scope.owner)");
   }
-  return r;
+  return r.ump === UMP_VERSION ? r : { ...r, ump: UMP_VERSION };
 }
 
 export type { Consent };

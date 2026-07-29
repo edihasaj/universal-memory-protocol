@@ -12,7 +12,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { UmpServer } from "../server.ts";
-import { UmpError } from "../types.ts";
+import { UMP_VERSION, UmpError } from "../types.ts";
 
 interface ToolDef {
   name: string;
@@ -26,7 +26,7 @@ export function createMcpServer(ump: UmpServer): Server {
   const byName = new Map(tools.map((t) => [t.name, t]));
 
   const server = new Server(
-    { name: "ump", version: "0.1.0" },
+    { name: "ump", version: UMP_VERSION },
     { capabilities: { tools: {} } },
   );
 

@@ -168,7 +168,7 @@ export class UmpServer {
   }
 
   async remember(draft: MemoryDraft): Promise<RememberResponse> {
-    // Structural validation against UMP 0.1 (SPEC §2).
+    // Structural validation against UMP 1.0 (SPEC §2).
     const problems = validateDraft(draft);
     if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
 

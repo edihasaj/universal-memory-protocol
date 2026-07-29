@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 1.0.0 - 2026-07-30
+
+### Stable protocol
+- Freeze the portable record shape and six core operations as UMP 1.0.
+- Emit `ump: "1.0"` from the SDK, MCP/HTTP/file bindings, schema, discovery,
+  audit events, and conformance tooling.
+- Accept UMP 0.1 portable records and capability tokens as explicit migration
+  inputs, then normalize records to UMP 1.0 before re-emitting them.
+- Reject unknown protocol and capability-token versions.
+- Document semantic versioning and post-1.0 extension rules.
+- Record the TypeScript reference server, Recall, and Recall Cloud as the
+  implementations used to validate the stable contract.
+
 ## 0.2.0 - 2026-07-11
 
 ### Added

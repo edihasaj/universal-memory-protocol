@@ -1,9 +1,17 @@
 /**
- * Universal Memory Protocol - record & operation types (UMP 0.1).
+ * Universal Memory Protocol - record & operation types (UMP 1.0).
  * Mirrors SPEC.md §2 (record) and §3 (operations). Transport-neutral.
  */
 
-export const UMP_VERSION = "0.1" as const;
+export const UMP_VERSION = "1.0" as const;
+export const LEGACY_UMP_VERSIONS = ["0.1"] as const;
+export type LegacyUmpVersion = (typeof LEGACY_UMP_VERSIONS)[number];
+export type SupportedUmpVersion = typeof UMP_VERSION | LegacyUmpVersion;
+
+export function isSupportedUmpVersion(value: unknown): value is SupportedUmpVersion {
+  return value === UMP_VERSION ||
+    LEGACY_UMP_VERSIONS.includes(value as LegacyUmpVersion);
+}
 
 export type MemoryKind =
   | "semantic"
@@ -125,7 +133,8 @@ export interface MemoryRecord {
 
 /** A record with server-managed fields optional (input to `remember`). */
 export type MemoryDraft = Omit<MemoryRecord, "ump" | "id" | "time"> & {
-  ump?: typeof UMP_VERSION;
+  /** UMP 0.1 is accepted as an import compatibility format. Servers emit 1.0. */
+  ump?: SupportedUmpVersion;
   id?: string;
   time?: Partial<MemoryTime>;
 };

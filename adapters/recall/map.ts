@@ -8,11 +8,12 @@
  */
 
 import { base32nopad } from "@scure/base";
-import type {
-  ActorKind,
-  MemoryDraft,
-  MemoryKind,
-  MemoryRecord,
+import {
+  UMP_VERSION,
+  type ActorKind,
+  type MemoryDraft,
+  type MemoryKind,
+  type MemoryRecord,
 } from "../../src/types.ts";
 
 // Recall's native shapes, modeled locally so this adapter does not import
@@ -72,7 +73,7 @@ export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryReco
     m.status === "active" ? "active" : m.status === "rejected" ? "tombstoned" : "candidate";
   const created = m.created_at ?? new Date(0).toISOString();
   return {
-    ump: "0.1",
+    ump: UMP_VERSION,
     id: toUmpId(m.id),
     // Prefer the original UMP kind (preserved in capture-context); fall back to
     // mapping Recall's native type when it was not written through UMP.

@@ -31,7 +31,7 @@ const fixedClock = () => new Date("2026-06-04T10:00:00Z");
 function makeServer(opts: { sign?: boolean } = {}) {
   return new UmpServer({
     name: "ump-ref",
-    version: "0.1.0",
+    version: "1.0.0",
     store: new InMemoryStore(),
     now: fixedClock,
     key: opts.sign ? OWNER : undefined,

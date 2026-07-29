@@ -1,5 +1,5 @@
 /**
- * Lightweight structural validation of a Memory Record against the UMP 0.1
+ * Lightweight structural validation of a Memory Record against the UMP 1.0
  * constraints (SPEC §2). Dependency-free - checks the same invariants the JSON
  * Schema encodes (src/schema/ump-record.schema.json) without a schema engine.
  *
@@ -8,6 +8,7 @@
 
 import {
   UMP_VERSION,
+  isSupportedUmpVersion,
   type MemoryDraft,
   type MemoryKind,
   type Visibility,
@@ -22,7 +23,9 @@ export function validateDraft(d: MemoryDraft): string[] {
   const errs: string[] = [];
   const req = (cond: unknown, msg: string) => { if (!cond) errs.push(msg); };
 
-  if (d.ump !== undefined && d.ump !== UMP_VERSION) errs.push(`ump version must be ${UMP_VERSION}`);
+  if (d.ump !== undefined && !isSupportedUmpVersion(d.ump)) {
+    errs.push(`ump version must be ${UMP_VERSION} or a supported legacy version`);
+  }
   req(d.body?.text && typeof d.body.text === "string", "body.text is required");
   req(KINDS.includes(d.kind), `kind must be one of ${KINDS.join("|")}`);
   req(d.scope?.owner, "scope.owner (DID) is required");

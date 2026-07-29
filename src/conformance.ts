@@ -5,7 +5,7 @@
  */
 
 import { verify } from "./integrity.ts";
-import type { ConformanceLevel, MemoryRecord } from "./types.ts";
+import { UMP_VERSION, type ConformanceLevel, type MemoryRecord } from "./types.ts";
 
 export interface Check {
   id: string;
@@ -60,8 +60,9 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   try {
     const caps = await call("GET", "/ump/capabilities");
     add("L1.capabilities", "L1",
-      caps.status === 200 && caps.json?.ump && Array.isArray(caps.json?.kinds) && caps.json.kinds.length === 5,
-      `status ${caps.status}, kinds ${caps.json?.kinds?.length}`);
+      caps.status === 200 && caps.json?.ump === UMP_VERSION &&
+      Array.isArray(caps.json?.kinds) && caps.json.kinds.length === 5,
+      `status ${caps.status}, ump ${caps.json?.ump}, kinds ${caps.json?.kinds?.length}`);
 
     const rem = await call("POST", "/ump/remember", {
       kind: "procedural",
@@ -189,5 +190,5 @@ export async function runConformance(baseUrl: string, opts: RunOptions = {}): Pr
   // L0 is implied if any record round-trips (it carries the portable format).
   if (level === "none" && createdRecord) level = "L1";
 
-  return { level, badge: `UMP 0.1 / ${level}`, checks };
+  return { level, badge: `UMP ${UMP_VERSION} / ${level}`, checks };
 }

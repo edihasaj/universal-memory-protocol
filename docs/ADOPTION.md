@@ -38,7 +38,7 @@ Mapping:
 | HTTP binding | daemon `/compile` `/correct` … | add `/ump/*` aliases |
 | file binding | CLAUDE.md / AGENTS.md / `.recall/context.md` | add `*.ump.json` + `*.ump.md` + `.well-known/ump.json` |
 
-Deliverable: Recall ships an `--ump` mode advertising `UMP 0.1 / L2` (then L3),
+Deliverable: Recall ships an `--ump` mode advertising `UMP 1.0 / L2` (then L3),
 proving the spec against a real memory engine while `@universalmemoryprotocol/core` remains the
 neutral reference SDK/server.
 
@@ -61,14 +61,15 @@ Thin shims so UMP isn't all-or-nothing:
 
 ## 4. Deliverables checklist
 
-- [ ] `ump-spec` (this repo) - SPEC + JSON Schema for the record + test vectors.
-- [ ] `ump-js` / `ump-py` SDKs - client + server helpers, MCP+HTTP+file bindings.
-- [ ] Conformance suite - runs L0-L3 assertions against any endpoint; emits a badge.
-- [ ] Recall `--ump` production engine adapter (L2 → L3).
+- [x] `ump-spec` (this repo) - SPEC + JSON Schema for the record + test vectors.
+- [x] `ump-js` SDK - client + server helpers, MCP+HTTP+file bindings.
+- [x] Conformance suite - runs L0-L3 assertions against any endpoint; emits a badge.
+- [x] Recall `ump` production engine adapter (L2).
+- [x] Recall Cloud independent Python/HTTP/MCP implementation (L1 core + forget).
 - [ ] 2 adapters that interoperate (e.g. Recall ↔ openclaw) - proves portability.
-- [ ] `.well-known/ump.json` discovery + a public example export.
-- [ ] A "round-trip" demo: a memory written in Claude Code, recalled in Codex,
-      exported to a file, re-imported into ChatGPT - the money shot.
+- [x] `.well-known/ump.json` discovery.
+- [x] A "round-trip" demo: a memory written in one agent, exported as a
+  portable file, and recalled by a second agent.
 
 ## 5. Governance
 
@@ -81,18 +82,20 @@ Thin shims so UMP isn't all-or-nothing:
   governance early (a working group / foundation track) - the difference between a
   trusted standard and a distrusted vendor spec. MCP's perceived neutrality was
   decisive; an "open" spec that one company controls gets routed around.
-- **RFC process:** publish v0.1 as an RFC; resolve SPEC §8 open questions with ≥2
-  independent implementations before calling anything 1.0.
+- **RFC process:** UMP 1.0 freezes the record and six core operations after
+  validation in the TypeScript reference server, Recall, and Recall Cloud.
+  Additive extensions require conformance vectors and implementation evidence.
+  Breaking changes require the next major version.
 
 ## 6. Sequencing
 
-1. **v0.1 (now):** spec + JSON Schema + Recall `--ump` (L2) + one adapter. Internal dogfood.
-2. **v0.2:** SDKs + conformance suite + the round-trip demo; publish RFC; recruit a
-   second external implementer.
-3. **v0.3:** L3 (signing, capability tokens, rehydration), `subscribe`,
-   `.well-known` discovery; submit alongside MCP/A2A ecosystem conversations.
-4. **1.0:** ≥2 interop implementations across vendors; freeze the record + ops;
-   move governance to a neutral steward.
+1. **v0.1:** spec + JSON Schema + first Recall adapter.
+2. **v0.2:** SDK, conformance suite, round-trip demo, and operation auditing.
+3. **v1.0:** stable record and six-operation contract, signed reference
+   implementation, legacy `0.1` import compatibility, Recall and Recall Cloud
+   implementations.
+4. **Post-1.0:** additional language SDKs, independent adopters, and neutral
+   working-group governance.
 
 ## 7. Remaining decisions
 

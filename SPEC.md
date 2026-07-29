@@ -1,6 +1,6 @@
 # Universal Memory Protocol - Specification
 
-**Version:** 0.1 · **Status:** live
+**Version:** 1.0 · **Status:** stable
 
 This document specifies UMP: a portable record format and a set of negotiated
 operations for reading, writing, and exchanging agent memory across harnesses,
@@ -37,8 +37,8 @@ projection is defined in §6.3.
 
 ```jsonc
 {
-  "ump": "0.1",                          // REQUIRED. spec version
-  "id": "urn:ump:9f2c…",                 // REQUIRED. stable, globally unique
+  "ump": "1.0",                          // REQUIRED. spec version
+  "id": "urn:ump:jbswy3dpehpk3pxp",      // REQUIRED. stable, globally unique
   "kind": "semantic",                    // REQUIRED. see §2.1
   "body": {                              // REQUIRED. the memory itself
     "text": "Use pnpm, never npm, in this repo.",
@@ -181,11 +181,11 @@ Negotiation handshake. No memory side effects.
 
 ```jsonc
 // → request
-{ "client": { "name": "claude-code", "ump": "0.1" } }
+{ "client": { "name": "claude-code", "ump": "1.0" } }
 // ← response
 {
   "server": { "name": "recall", "version": "1.4.0" },
-  "ump": "0.1",
+  "ump": "1.0",
   "conformance": "L3",
   "kinds": ["semantic","episodic","procedural","working","identity"],
   "bindings": ["mcp","http","file"],
@@ -391,8 +391,8 @@ content hash (L2+, content-addressed → dedup-friendly and tamper-evident).
 
 ```markdown
 ---
-ump: "0.1"
-id: urn:ump:9f2c…
+ump: "1.0"
+id: urn:ump:jbswy3dpehpk3pxp
 kind: procedural
 scope: { owner: did:key:z6Mk…, project: …/recall, visibility: private }
 time: { observed: 2026-06-04T09:58:00Z, valid_from: 2026-06-04T00:00:00Z }
@@ -416,12 +416,26 @@ between `*.ump.md` and `*.ump.json` MUST be lossless for L2 fields.
 | **L2 Standard** | L1 + `revise`, `forget`; bi-temporal `valid_at`; provenance; scope + consent enforcement. |
 | **L3 Full** | L2 + `feedback`, `subscribe`; integrity verify on read & sign on write; capability tokens; injection-resistant rehydration. |
 
-A product states e.g. "UMP 0.1 / L2 / MCP+file bindings". Test vectors and a
+A product states e.g. "UMP 1.0 / L2 / MCP+file bindings". Test vectors and a
 conformance suite ship with the reference implementation (see ADOPTION.md).
 
 ---
 
-## 8. Open questions (for RFC)
+## 8. Versioning and extensions
+
+UMP uses `major.minor` protocol versions. A conforming implementation MUST emit
+records using the version it advertises through `capabilities.ump`. It MUST
+reject an unknown major version rather than silently reinterpret the record.
+Minor releases are additive and MUST preserve every field and operation defined
+by the preceding minor release.
+
+UMP 1.0 implementations MAY import UMP 0.1 portable records as a migration
+bridge. When they do, they MUST normalize the imported record to `ump: "1.0"`
+before emitting, signing, or persisting it again. This compatibility rule does
+not make `0.1` a negotiated runtime version.
+
+The 1.0 record shape and six core operations are frozen. Candidate post-1.0
+extensions include:
 
 1. **Entity graph**: standardize an `entity:` node format, or keep it engine-only
    behind `relations`? (Recall + oktapod both have rich graphs.)
@@ -430,7 +444,7 @@ conformance suite ship with the reference implementation (see ADOPTION.md).
 3. **Consolidation/"rethinking"**: out of scope (engine-side) - or a standard
    optional `consolidate` op so any harness can trigger another's maintenance?
 4. **Decay**: keep as opaque hint, or define 2-3 named decay models for portability?
-5. **Naming/governance**: final name, steward, and license (see ADOPTION.md §5).
+5. **Additional SDKs**: standard client/server helpers beyond TypeScript.
 
 ---
 

@@ -20,7 +20,7 @@ const fixed = () => new Date("2026-06-04T10:00:00Z");
 function server(audit?: AuditLog, opts: { sign?: boolean } = {}) {
   return new UmpServer({
     name: "ump-ref",
-    version: "0.1.0",
+    version: "1.0.0",
     store: new InMemoryStore(),
     now: fixed,
     key: opts.sign ? OWNER : undefined,
@@ -189,7 +189,7 @@ describe("audit over the HTTP binding", () => {
   it("queries and verifies the trail; 400s when auditing is off", async () => {
     // Auditing enabled.
     const on = new UmpServer({
-      name: "ump-ref", version: "0.1.0", store: new InMemoryStore(),
+      name: "ump-ref", version: "1.0.0", store: new InMemoryStore(),
       now: fixed, audit: new InMemoryAuditLog({ now: fixed }),
     });
     await on.remember(draft("served over http"));

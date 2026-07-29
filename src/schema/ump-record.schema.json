@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:ump:schema:record:0.1",
+  "$id": "urn:ump:schema:record:1.0",
   "title": "UMP Memory Record",
-  "description": "Universal Memory Protocol 0.1 - the portable memory record (SPEC §2).",
+  "description": "Universal Memory Protocol 1.0 - the portable memory record (SPEC §2).",
   "type": "object",
   "required": ["ump", "id", "kind", "body", "scope", "time"],
   "additionalProperties": false,
   "properties": {
-    "ump": { "const": "0.1" },
+    "ump": { "const": "1.0" },
     "id": { "type": "string", "pattern": "^urn:ump:[a-z2-7]+$" },
     "kind": {
       "enum": ["semantic", "episodic", "procedural", "working", "identity"]
