@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.0.1 - 2026-07-30
+
+### Clarified
+- Define the boundary between upstream admission/responsibility workflows and
+  UMP's portable-memory layer, including the non-authoritative meaning of
+  `lifecycle.status=candidate` and record signatures.
+- Add a signed, tested responsibility-confirmed interoperability example.
+
 ## 1.0.0 - 2026-07-30
 
 ### Stable protocol

@@ -49,7 +49,7 @@ const audit = auditOn
 
 const server = new UmpServer({
   name: "ump-memory",
-  version: "1.0.0",
+  version: "1.0.1",
   conformance: "L2",
   store,
   key,

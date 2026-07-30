@@ -167,6 +167,37 @@ by the **operator's** DID key - explicitly *not* the model vendor's. This is the
 ownership moat: a memory is tamper-evident and provably the user's, independent of
 where it's stored. Optional at L2 (interop without crypto), REQUIRED at L3.
 
+### 2.9 Admission and responsibility
+
+UMP begins at the portable-memory boundary. Extraction, review, approval, and
+other admission workflows happen before or around `remember` and remain
+implementation policy. A server MAY require such a workflow and reject records
+that do not pass it.
+
+Neither a successful `remember` nor `lifecycle.status=active` proves that a
+record is true, reviewed, or approved. Likewise, an `integrity` signature proves
+who signed the final record and that its bytes have not changed; it does not by
+itself prove the record's factual correctness or the meaning of an upstream
+approval.
+
+`lifecycle.status=candidate` is an engine-facing confidence or promotion hint,
+not a consent, authorization, or pending-review state. Consumers MAY recall
+candidate records. A system that permits reuse only after confirmation MUST
+enforce that gate as policy rather than infer approval from a lifecycle value.
+
+When an admission result needs to travel with a record, producers SHOULD:
+
+1. put the responsible actor and outcome in `provenance.actor` and
+   `provenance.method`;
+2. reference the signed review or responsibility artifact from
+   `provenance.source` / `provenance.evidence`;
+3. place profile-specific machine-readable details under `body.structured`; and
+4. sign the finalized record only after those fields are populated.
+
+This preserves UMP's small wire format while allowing responsibility systems to
+export confirmed records. See
+[`examples/responsibility-confirmed.ump.json`](./examples/responsibility-confirmed.ump.json).
+
 ---
 
 ## 3. Operations

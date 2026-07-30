@@ -1,0 +1,53 @@
+{
+  "ump": "1.0",
+  "id": "urn:ump:scbkrconfirmedexample",
+  "kind": "semantic",
+  "body": {
+    "text": "The deployment checklist was reviewed and approved for reuse.",
+    "structured": {
+      "responsibility": {
+        "profile": "https://github.com/HIJO790401/scbkr-local-responsibility-model",
+        "status": "confirmed",
+        "manifest_ref": "urn:scbkr:responsibility:deploy-checklist-2026-07-30"
+      }
+    }
+  },
+  "scope": {
+    "owner": "did:key:z6MkmNZGTCcVSQG2dp1cBYssQWkNEwFHBvsNmBzJs6iGY9eA",
+    "project": "github.com/example/deployment",
+    "visibility": "shared"
+  },
+  "time": {
+    "created": "2026-07-30T12:00:00Z",
+    "observed": "2026-07-30T11:55:00Z",
+    "valid_from": "2026-07-30T12:00:00Z",
+    "valid_to": null
+  },
+  "lifecycle": {
+    "confidence": 1,
+    "status": "active"
+  },
+  "provenance": {
+    "actor": "did:key:z6MkmNZGTCcVSQG2dp1cBYssQWkNEwFHBvsNmBzJs6iGY9eA",
+    "actor_kind": "user",
+    "method": "responsibility_confirmed",
+    "source": {
+      "ref": "urn:scbkr:responsibility:deploy-checklist-2026-07-30"
+    },
+    "evidence": [
+      {
+        "ref": "urn:scbkr:responsibility:deploy-checklist-2026-07-30",
+        "weight": 1
+      }
+    ]
+  },
+  "consent": {
+    "retention": "P365D",
+    "exportable": true
+  },
+  "integrity": {
+    "content_hash": "blake3:jy4qfsgftbzitvwv3k7zcj5guxhyarti57cwp3rc7jqmqt2uo2aa",
+    "signature": "ed25519:N5SkLyTQTFSJDZXnsJVtNpbKtcDE0dtCdL5w6TSzY0Yp/bFm7p+BVZq6vFTSlfQnY81zIf1UlpnnbTB+O+XMAQ==",
+    "signer": "did:key:z6MkmNZGTCcVSQG2dp1cBYssQWkNEwFHBvsNmBzJs6iGY9eA"
+  }
+}

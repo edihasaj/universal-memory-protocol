@@ -289,6 +289,6 @@ function readVersion(): string {
   try {
     return JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
   } catch {
-    return "1.0.0";
+    return "1.0.1";
   }
 }

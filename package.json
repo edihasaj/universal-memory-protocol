@@ -1,6 +1,6 @@
 {
   "name": "@universalmemoryprotocol/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Universal Memory Protocol (UMP) - reference SDK and minimal server: portable signed memory records, six negotiated operations, MCP/HTTP/file bindings.",
   "type": "module",
   "license": "MIT",
@@ -47,6 +47,7 @@
   "files": [
     "dist",
     "src/schema",
+    "examples",
     "SPEC.md",
     "LICENSE",
     "LICENSE-PACKAGE",
