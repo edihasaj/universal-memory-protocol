@@ -39,7 +39,10 @@ describe("MCP temporal discoverability", () => {
     const tools = await client.listTools();
     const recall = tools.tools.find((tool) => tool.name === "ump.recall");
     const remember = tools.tools.find((tool) => tool.name === "ump.remember");
+    const get = tools.tools.find((tool) => tool.name === "ump.get");
     const revise = tools.tools.find((tool) => tool.name === "ump.revise");
+    const forget = tools.tools.find((tool) => tool.name === "ump.forget");
+    const feedback = tools.tools.find((tool) => tool.name === "ump.feedback");
 
     expect(recall).toBeDefined();
     const recallProperties = recall!.inputSchema.properties as Record<string, any>;
@@ -47,6 +50,10 @@ describe("MCP temporal discoverability", () => {
     expect(Object.keys(scope)).toEqual(
       expect.arrayContaining(["owner", "project", "user", "agent", "session", "visibility"]),
     );
+    expect(scope.owner.description).toContain(OWNER);
+    expect(scope.owner.examples).toContain(OWNER);
+    expect(scope.project.description).toMatch(/exact.*identifier.*do not strip/i);
+    expect(recall!.annotations).toMatchObject({ readOnlyHint: true });
     const filter = recallProperties.filter.properties as Record<string, any>;
     expect(filter.valid_at).toMatchObject({ type: "string", format: "date-time" });
     expect(filter.kind.items.enum).toContain("semantic");
@@ -69,6 +76,11 @@ describe("MCP temporal discoverability", () => {
     expect(wrappedDraft.required).toEqual(
       expect.arrayContaining(["kind", "body", "scope"]),
     );
+    expect(remember!.annotations).toMatchObject({ readOnlyHint: false });
+    expect(get!.annotations).toMatchObject({ readOnlyHint: true });
+    expect(revise!.annotations).toMatchObject({ readOnlyHint: false });
+    expect(forget!.annotations).toMatchObject({ readOnlyHint: false });
+    expect(feedback!.annotations).toMatchObject({ readOnlyHint: false });
 
     const patch = (revise!.inputSchema.properties as Record<string, any>)
       .patch.properties as Record<string, any>;
@@ -79,6 +91,14 @@ describe("MCP temporal discoverability", () => {
       expect.arrayContaining(["observed", "valid_from", "valid_to"]),
     );
     expect(patch.time.properties.created).toBeUndefined();
+    const capabilitiesTool = tools.tools.find((tool) => tool.name === "ump.capabilities");
+    expect(capabilitiesTool!.description).toContain(OWNER);
+    expect(capabilitiesTool!.annotations).toMatchObject({ readOnlyHint: true });
+    const capabilities = textResult(await client.callTool({
+      name: "ump.capabilities",
+      arguments: {},
+    }));
+    expect(capabilities.scope_hint).toEqual({ owner: OWNER });
   });
 
   it("filters valid time through MCP without treating an owner hint as authority", async () => {
@@ -217,11 +237,24 @@ describe("MCP temporal discoverability", () => {
     expect(unscoped.results).toEqual([]);
   });
 
-  it("provides initialization guidance without relying on an exact prompt", async () => {
-    const { client } = await connectedMcp();
-    const instructions = client.getInstructions() ?? "";
-    expect(instructions).toContain(OWNER);
-    expect(instructions).toMatch(/valid_at/i);
-    expect(instructions).toMatch(/not authentication|not authorize/i);
+  it("omits discovery metadata when the binding has no configured owner", async () => {
+    const ump = new UmpServer({
+      name: "temporal-test",
+      version: "0",
+      store: new InMemoryStore(),
+    });
+    const server = createMcpServer(ump);
+    const client = new Client({ name: "temporal-test-client", version: "0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const capabilities = textResult(await client.callTool({
+      name: "ump.capabilities",
+      arguments: {},
+    }));
+    expect(capabilities.scope_hint).toBeUndefined();
   });
 });

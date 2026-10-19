@@ -18,6 +18,7 @@ interface ToolDef {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations: { readOnlyHint: boolean };
   handler: (args: any) => Promise<unknown>;
 }
 
@@ -30,7 +31,7 @@ export interface McpServerOptions {
 }
 
 export function createMcpServer(ump: UmpServer, options: McpServerOptions = {}): Server {
-  const tools = toolDefs(ump);
+  const tools = toolDefs(ump, options);
   const byName = new Map(tools.map((t) => [t.name, t]));
 
   const server = new Server(
@@ -42,10 +43,11 @@ export function createMcpServer(ump: UmpServer, options: McpServerOptions = {}):
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map(({ name, description, inputSchema }) => ({
+    tools: tools.map(({ name, description, inputSchema, annotations }) => ({
       name,
       description,
       inputSchema,
+      annotations,
     })),
   }));
 
@@ -90,7 +92,7 @@ function mcpInstructions(options: McpServerOptions): string {
   );
 }
 
-function toolDefs(ump: UmpServer): ToolDef[] {
+function toolDefs(ump: UmpServer, options: McpServerOptions): ToolDef[] {
   const obj = (props: Record<string, unknown>, required: string[] = []) => ({
     type: "object",
     properties: props,
@@ -105,12 +107,20 @@ function toolDefs(ump: UmpServer): ToolDef[] {
       "RFC 3339 timestamp with timezone and at most three fractional-second digits " +
       "(millisecond precision).",
   };
+  const ownerSchema = {
+    ...str,
+    description: options.owner
+      ? `Owner DID. Configured owner hint: ${options.owner}. Include it explicitly for private or shared memory; this hint is not authentication or authorization.`
+      : "Owner DID. Include it explicitly for private or shared memory.",
+    ...(options.owner ? { examples: [options.owner] } : {}),
+  };
   const scope = obj({
-    owner: {
+    owner: ownerSchema,
+    project: {
       ...str,
-      description: "Owner DID. Include it explicitly for private or shared memory.",
+      description:
+        "Exact project identifier supplied by the user; do not strip its namespace or prefix.",
     },
-    project: { ...str, description: "Project identifier." },
     user: { ...str, description: "Subject DID when different from owner." },
     agent: { ...str, description: "Agent identifier." },
     session: { ...str, description: "Session identifier." },
@@ -127,11 +137,12 @@ function toolDefs(ump: UmpServer): ToolDef[] {
     },
   }, ["text"]);
   const writeScope = obj({
-    owner: {
+    owner: ownerSchema,
+    project: {
       ...str,
-      description: "Owner DID for this memory.",
+      description:
+        "Exact project identifier supplied by the user; do not strip its namespace or prefix.",
     },
-    project: { ...str, description: "Project identifier." },
     user: { ...str, description: "Subject DID when different from owner." },
     agent: { ...str, description: "Agent identifier." },
     session: { ...str, description: "Session identifier." },
@@ -225,6 +236,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
             until: str,
             limit: { type: "number" },
           }),
+          annotations: { readOnlyHint: true },
           handler: async (a) => ({ events: await ump.audit(a) }),
         },
         {
@@ -232,6 +244,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
           description:
             "Verify the operation log's hash chain (and signatures) end to end; reports the first break.",
           inputSchema: obj({}),
+          annotations: { readOnlyHint: true },
           handler: async () => ump.verifyAudit(),
         },
       ]
@@ -241,9 +254,16 @@ function toolDefs(ump: UmpServer): ToolDef[] {
     {
       name: "ump.capabilities",
       description:
-        "Negotiate UMP capabilities: kinds, bindings, conformance level, retrieval signals.",
+        "Negotiate UMP capabilities: kinds, bindings, conformance level, retrieval signals. " +
+        (options.owner
+          ? `This MCP binding returns non-normative scope_hint.owner=${options.owner} as an explicit-scope discovery hint; it does not authenticate, authorize, or alter requests.`
+          : "A configured MCP binding can return non-normative scope_hint discovery metadata; it never authenticates, authorizes, or alters requests."),
       inputSchema: obj({}),
-      handler: async () => ump.capabilities(),
+      annotations: { readOnlyHint: true },
+      handler: async () => ({
+        ...ump.capabilities(),
+        ...(options.owner ? { scope_hint: { owner: options.owner } } : {}),
+      }),
     },
     {
       name: "ump.recall",
@@ -281,6 +301,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
         },
         ["query"],
       ),
+      annotations: { readOnlyHint: true },
       handler: async (a) => ump.recall(a),
     },
     {
@@ -309,12 +330,14 @@ function toolDefs(ump: UmpServer): ToolDef[] {
         },
         [],
       ),
+      annotations: { readOnlyHint: false },
       handler: async (a) => ump.remember(a.record ?? a),
     },
     {
       name: "ump.get",
       description: "Fetch a memory record by id.",
       inputSchema: obj({ id: str }, ["id"]),
+      annotations: { readOnlyHint: true },
       handler: async (a) => ({ record: await ump.get(a.id) }),
     },
     {
@@ -333,6 +356,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
           time: reviseTime,
         }),
       }, ["id", "patch"]),
+      annotations: { readOnlyHint: false },
       handler: async (a) => ump.revise(a),
     },
     {
@@ -342,6 +366,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
         "id",
         "reason",
       ]),
+      annotations: { readOnlyHint: false },
       handler: async (a) => ump.forget(a),
     },
     {
@@ -356,6 +381,7 @@ function toolDefs(ump: UmpServer): ToolDef[] {
         },
         ["id", "outcome"],
       ),
+      annotations: { readOnlyHint: false },
       handler: async (a) => ump.feedback(a),
     },
     ...auditTools,

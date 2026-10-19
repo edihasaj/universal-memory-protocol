@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.0.4 - 2026-10-20
+
+### Fixed
+- Expose the configured owner hint in MCP tool schemas and capability results
+  for hosts that do not forward initialization instructions to agents.
+- Describe exact project identifiers and read-only tool annotations without
+  filling scope fields or changing authorization.
+
 ## 1.0.3 - 2026-10-19
 
 ### Fixed
