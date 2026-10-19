@@ -1,8 +1,9 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  InMemoryStore,
   MarkdownDirectoryStore,
   PostgresStore,
   RedisStore,
@@ -89,6 +90,93 @@ describe("persistent store adapters", () => {
     });
     expect(res.results[0]?.record.id).toBe(id);
     expect(vector.lastSearch?.vector).toEqual([8]);
+  });
+});
+
+afterEach(() => vi.useRealTimers());
+
+describe("InMemoryStore valid-time defaults", () => {
+  const now = "2026-06-04T10:00:00.000Z";
+
+  function record(
+    id: string,
+    time: Omit<MemoryRecord["time"], "created">,
+  ): MemoryRecord {
+    return {
+      ump: "1.0",
+      id,
+      kind: "semantic",
+      body: { text: `release roadmap ${id}` },
+      scope: { owner: OWNER, project: "p", visibility: "private" },
+      time: { ...time, created: "2026-06-01T10:00:00Z" },
+    };
+  }
+
+  async function ids(
+    store: InMemoryStore,
+    validAt?: string,
+  ): Promise<string[]> {
+    const results = await store.search({
+      query: "release roadmap",
+      scope: { owner: OWNER, project: "p" },
+      filter: validAt ? { valid_at: validAt } : undefined,
+    });
+    return results.map(({ record }) => record.id).sort();
+  }
+
+  it("uses one inclusive current-validity instant by default", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(now));
+    const store = new InMemoryStore();
+    await Promise.all([
+      store.put(record("future-open", { valid_from: "2026-06-04T11:00:00Z", valid_to: null })),
+      store.put(record("current-open", { valid_from: "2026-06-04T09:00:00Z", valid_to: null })),
+      store.put(record("current-bounded", { valid_from: "2026-06-04T09:00:00Z", valid_to: "2026-06-04T11:00:00Z" })),
+      store.put(record("expired", { valid_from: "2026-06-04T08:00:00Z", valid_to: "2026-06-04T09:00:00Z" })),
+      store.put(record("starts-now", { valid_from: now, valid_to: "2026-06-04T11:00:00Z" })),
+      store.put(record("ends-now", { valid_from: "2026-06-04T09:00:00Z", valid_to: now })),
+      store.put(record("legacy", { valid_to: null })),
+    ]);
+
+    const defaultSearch = await store.search({
+      query: "release roadmap",
+      scope: { owner: OWNER, project: "p" },
+    });
+    const explicitSearch = await store.search({
+      query: "release roadmap",
+      scope: { owner: OWNER, project: "p" },
+      filter: { valid_at: now },
+    });
+    const defaultResults = defaultSearch.map(({ record }) => record.id).sort();
+    const explicitResults = explicitSearch.map(({ record }) => record.id).sort();
+
+    expect(defaultResults).toEqual(explicitResults);
+    expect(defaultSearch.map(({ signals }) => signals.recency))
+      .toEqual(explicitSearch.map(({ signals }) => signals.recency));
+    expect(defaultResults).toEqual([
+      "current-bounded",
+      "current-open",
+      "ends-now",
+      "legacy",
+      "starts-now",
+    ]);
+  });
+
+  it("keeps explicit historical and future point-in-time lookups", async () => {
+    const store = new InMemoryStore();
+    await Promise.all([
+      store.put(record("historical", {
+        valid_from: "2026-06-04T08:00:00Z",
+        valid_to: "2026-06-04T09:00:00Z",
+      })),
+      store.put(record("future", {
+        valid_from: "2026-06-04T11:00:00Z",
+        valid_to: null,
+      })),
+    ]);
+
+    await expect(ids(store, "2026-06-04T08:30:00Z")).resolves.toEqual(["historical"]);
+    await expect(ids(store, "2026-06-04T11:30:00Z")).resolves.toEqual(["future"]);
   });
 });
 

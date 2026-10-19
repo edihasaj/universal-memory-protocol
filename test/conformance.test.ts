@@ -95,6 +95,23 @@ describe("core ops: remember / get / recall (SPEC §3)", () => {
     expect((await s.get(id)).body.text).toContain("pnpm gate");
     await expect(s.get("urn:ump:missing")).rejects.toThrow(/not_found/);
   });
+
+  it("accepts a typed legacy draft and emits normalized 1.0 records", async () => {
+    const s = makeServer();
+    const legacyDraft: MemoryDraft = {
+      ...draft("legacy import package manager is pnpm"),
+      ump: "0.1",
+    };
+    const { id } = await s.remember(legacyDraft);
+
+    expect((await s.get(id)).ump).toBe(UMP_VERSION);
+    const recalled = await s.recall({
+      query: "legacy import package manager",
+      scope: { owner: OWNER.did, project: "edihasaj/recall" },
+    });
+    expect(recalled.results.find((result) => result.record.id === id)?.record.ump)
+      .toBe(UMP_VERSION);
+  });
 });
 
 describe("bi-temporal revise: supersede, never delete (SPEC §2.3, §3.5)", () => {

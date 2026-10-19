@@ -53,7 +53,9 @@ export class InMemoryStore implements MemoryStore {
   }
 
   async search(req: RecallRequest): Promise<RecallResult[]> {
-    const validAt = req.filter?.valid_at;
+    // Capture one effective instant so validity and recency agree throughout
+    // this search. An omitted valid_at means "now" (SPEC §3.2).
+    const validAt = req.filter?.valid_at ?? new Date().toISOString();
     const limit = req.limit ?? 8;
     const wantKinds = req.filter?.kind;
     const wantStatus = req.filter?.status ?? ["active", "candidate"];
@@ -138,19 +140,15 @@ function scopeMatch(r: MemoryRecord, req: RecallRequest): number {
   return total === 0 ? 0.5 : hits / total;
 }
 
-function validAtMatches(r: MemoryRecord, at?: string): boolean {
-  if (!at) {
-    // default "now": exclude records whose valid_to is in the past
-    return r.time.valid_to == null;
-  }
+function validAtMatches(r: MemoryRecord, at: string): boolean {
   const t = Date.parse(at);
   const from = r.time.valid_from ? Date.parse(r.time.valid_from) : -Infinity;
   const to = r.time.valid_to ? Date.parse(r.time.valid_to) : Infinity;
   return from <= t && t <= to;
 }
 
-function recencyScore(r: MemoryRecord, at?: string): number {
-  const now = at ? Date.parse(at) : Date.now();
+function recencyScore(r: MemoryRecord, at: string): number {
+  const now = Date.parse(at);
   const obs = Date.parse(r.time.observed ?? r.time.created);
   if (Number.isNaN(obs)) return 0;
   const ageDays = Math.max(0, (now - obs) / 86_400_000);

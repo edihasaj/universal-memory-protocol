@@ -130,6 +130,13 @@ failure - "user's employer is correct until they change jobs, then confidently
 wrong." A fact is never deleted on change; `valid_to` is set and a successor is
 linked via `supersedes`. History is queryable. (Model from Zep/Graphiti.)
 
+`valid_from` MAY be in the future: that is a legitimate scheduled-validity
+claim. Default current recall SHOULD not return a record before `valid_from`;
+the reference store applies the same inclusive interval check at "now" that it
+uses for an explicit `valid_at`. Validity expresses the producer's claim about a
+record, not whether a source statement is a plan or whether the claim is true.
+Admission and classification policy remain engine-defined (§2.9).
+
 ### 2.4 Lifecycle hints
 
 `confidence`, `salience`, `decay`, `status` are **engine-facing hints**, not

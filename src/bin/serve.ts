@@ -18,7 +18,7 @@ import { createHttpServer } from "../bindings/http.ts";
 const key = generateKeyPair();
 const ump = new UmpServer({
   name: "ump-ref",
-  version: "1.0.1",
+  version: "1.0.2",
   conformance: "L2",
   store: new InMemoryStore(),
   key,

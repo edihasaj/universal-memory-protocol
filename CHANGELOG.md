@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 1.0.2 - 2026-10-19
+
+### Fixed
+- Apply the current validity window when `valid_at` is omitted, excluding
+  future-effective records and including currently valid bounded records.
+- Use one query instant for validity filtering and recency ranking.
+
+### Clarified
+- Distinguish a record's asserted validity dates from upstream plan/state
+  classification and factual verification.
+- Verify that supported legacy 0.1 drafts normalize to 1.0 on retrieval.
+
 ## 1.0.1 - 2026-07-30
 
 ### Clarified
