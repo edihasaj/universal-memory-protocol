@@ -81,7 +81,7 @@ async function memory(): Promise<void> {
   if (port) createHttpServer(server, { wellKnown: { owner: key.did } }).listen(port, () => {});
 
   summary("memory", { owner: key.did, data: location, store: kind, port, audit: auditOn });
-  await createMcpServer(server).connect(new StdioServerTransport());
+  await createMcpServer(server, { owner: key.did }).connect(new StdioServerTransport());
 }
 
 async function audit(): Promise<void> {
@@ -126,7 +126,7 @@ async function serve(): Promise<void> {
   const port = httpPort();
   if (port) createHttpServer(server, { wellKnown: { owner: key.did } }).listen(port, () => {});
   summary("serve (ephemeral)", { owner: key.did, data: "in-memory", store: "memory", port });
-  await createMcpServer(server).connect(new StdioServerTransport());
+  await createMcpServer(server, { owner: key.did }).connect(new StdioServerTransport());
 }
 
 async function runImport(): Promise<void> {
@@ -289,6 +289,6 @@ function readVersion(): string {
   try {
     return JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version;
   } catch {
-    return "1.0.2";
+    return "1.0.3";
   }
 }

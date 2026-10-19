@@ -12,11 +12,10 @@ tests anywhere. The real `recall ump` command supplies the backend.
 
 - `map.ts` - pure Recall ↔ UMP translation (type↔kind, status, scope/visibility,
   provenance, reversible id bridging). Fully unit-tested.
-- `store.ts` - `RecallStore implements MemoryStore`: reads map faithfully; writes
-  are faithful by default (`put` stores the record as an active Recall memory and
-  returns Recall's id, so `remember` round-trips via `get` and stays fast - ~30ms
-  under concurrency). Pass `{ smart: true }` to route writes through Recall's
-  capture/judgement pipeline (extraction + candidate promotion) instead.
+- `store.ts` - `RecallStore implements MemoryStore`: reads map faithfully; a
+  native backend implements `putRecord(record, existingId?)` to retain the
+  complete UMP record. It requests enough hybrid candidates to filter scope,
+  lifecycle, kind, and validity before applying the UMP result limit.
 
 ## Mapping summary
 
@@ -32,53 +31,70 @@ tests anywhere. The real `recall ump` command supplies the backend.
 | `lifecycle.confidence` / `salience` | `confidence` |
 | `provenance` | `source` + `evidence` |
 | `id` `urn:ump:<base32>` | uuid (reversibly bridged) |
+| `time`, structured body, relations, full scope | `capture_context.ump_record` |
+
+The native backend is authoritative for its id, displayed text, and rejected
+status. The adapter preserves the rest of `ump_record`, then strips integrity
+when canonicalization changed a signed field.
+
+### Temporal fidelity
+
+`RecallBackend.putRecord(record, existingId?)` is required for temporal
+records. It receives and persists the whole UMP record, then returns the
+canonical native id. It must persist this direct UMP path without capture
+auto-injection; smart capture is a separate path. `compileHybrid` receives the
+UMP `filter` and `scope` and must honor its requested limit without a smaller
+hidden cap. The reference adapter enumerates candidate rows for correctness;
+this is an O(total rows) operation, not a benchmark of scalable temporal search.
+
+Older backends without `putRecord` remain compatible with ordinary,
+server-materialized `remember` calls and existing tombstones. They reject
+explicit `created`, `observed`, `valid_from`, or `valid_to` values before
+capture or direct storage, so timestamps cannot be silently flattened. Smart
+capture remains available for ordinary writes; it also rejects explicit
+temporal writes because capture judgement cannot guarantee a faithful record.
+
+`revise` validates both successor and closed-prior intervals before writing. A
+successor after an already-bounded prior is a legitimate gap: the earlier prior
+expiry remains unchanged. The base `MemoryStore` has no multi-record
+transaction, so a native backend should wrap successor and prior-closure
+writes in one transaction when it can; validation failures themselves happen
+before either write.
+
+Timestamps are strict RFC 3339 values with a timezone and millisecond
+precision (zero to three fractional digits). Higher precision is rejected
+rather than rounded.
 
 ## Wiring `recall ump` (in the Recall repo)
 
-Add `@universalmemoryprotocol/core` as a dependency, then mount the adapter over Recall's existing
-modules. The backend is ~30 lines bridging Recall's functions:
+Recall supplies its native backend and persisted operator identity. The SDK
+does not import Recall's database or compiler. The wiring in Recall's
+`src/ump/serve.ts` follows this shape:
 
 ```ts
-import { UmpServer, generateKeyPair, createMcpServer, createHttpServer } from "@universalmemoryprotocol/core";
-import { RecallStore, type RecallBackend } from "@universalmemoryprotocol/core/adapters/recall/store";
+import { UmpServer, createMcpServer } from "@universalmemoryprotocol/core";
+import { RecallStore } from "@universalmemoryprotocol/core/adapters/recall";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { initDb } from "../db/client.js";
+import { makeRecallBackend } from "./backend.js";
+import { loadPersistedUmpOperatorKey } from "./identity.js";
 
-// Recall's own modules:
-import { openDb } from "../db";
-import { queryMemories, getMemory } from "../models/memory";
-import { compileContextHybrid } from "../compiler/context";
-import { processCorrection } from "../capture/correction";
-
-const db = openDb();
-const owner = loadOrCreateOperatorDid();           // did:key from Recall config
-
-const backend: RecallBackend = {
-  queryMemories: (f) => queryMemories(db, { repo: f.repo }),
-  getMemory: (id) => getMemory(db, id),
-  compileHybrid: async ({ query, repo, limit }) => {
-    const ctx = await compileContextHybrid(db, { repo, query_text: query, config: { max_rules: limit } });
-    return ctx.memories.map((m) => ({ memory: m, score: m.score ?? m.confidence }));
-  },
-  capture: async ({ text, repo }) =>
-    processCorrection(db, text, { repo, sessionId: "ump", source: "ump_remember" }),
-};
+const db = initDb();
+const key = loadPersistedUmpOperatorKey(db.$client.name);
+const owner = key.did;
 
 const ump = new UmpServer({
-  name: "recall", version: RECALL_VERSION, conformance: "L2",
-  store: new RecallStore(backend, { owner: { did: owner } as any }),
-  key: operatorKeyPair,                            // signed writes; raise to L3 when capability enforcement is wired
+  name: "recall",
+  version: "ump-1.0.3",
+  conformance: "L1",
+  store: new RecallStore(makeRecallBackend(db, owner), { owner }),
+  key,
 });
 
-// expose over MCP (primary) and/or HTTP
-if (process.env.UMP_HTTP) createHttpServer(ump, { wellKnown: { owner } }).listen(Number(process.env.UMP_HTTP));
-await createMcpServer(ump).connect(new StdioServerTransport());
+await createMcpServer(ump, { owner }).connect(new StdioServerTransport());
 ```
 
-That makes Recall a conforming **L2** UMP server, with a clear path to **L3**
-once capability-token enforcement is wired at the binding boundary. `feedback`
-maps to Recall's `feedback`/`signal_outcome`; `revise`/`forget` map to Recall's
-supersession and `prune`/`reject`.
-
-> Status: the mapping + store are implemented and tested here against a fake
-> backend. The final wiring lives in the Recall repo (it needs Recall's native
-> deps + its own test gate) and is a small, well-scoped follow-up.
+The server advertises L1. Supporting dated records and revisions does not by
+itself certify every L2/L3 requirement, authentication or signature guarantees.
+Recall's own integration tests exercise SQLite persistence and the real MCP
+transport separately from this package's adapter tests.

@@ -163,6 +163,25 @@ remain implementation choices.
 | `revise` | Supersede a memory while preserving history. |
 | `forget` | Tombstone a memory with a reason. |
 
+### Historical queries
+
+An agent can ask for records valid at an explicit instant:
+
+```ts
+await ump.recall({
+  query: "production hosting provider",
+  scope: { owner: key.did, project: "github.com/acme/app" },
+  filter: { valid_at: "2026-02-15T00:00:00Z" },
+});
+```
+
+Omitting `valid_at` asks for records valid now. The MCP tools describe the
+same fields so agents can discover them without reading SDK source.
+Historical selection requires a backend that preserves validity dates;
+the Recall adapter's faithful-record backend contract provides that path.
+Source assertions and plans are not independently verified facts. See
+[temporal queries](docs/TEMPORAL-QUERIES.md) for examples and boundaries.
+
 Optional full-tier operations:
 
 | Operation | Purpose |

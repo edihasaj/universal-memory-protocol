@@ -13,7 +13,6 @@ import type {
   ForgetRequest,
   MemoryDraft,
   MemoryRecord,
-  Provenance,
   RecallRequest,
   RecallResponse,
   RememberResponse,
@@ -29,7 +28,19 @@ import type {
   AuditQuery,
   AuditVerification,
 } from "./audit.ts";
-import { validateDraft } from "./validate.ts";
+import {
+  validateDraft,
+  validateRecallRequest,
+  validateTime,
+} from "./validate.ts";
+import { closePriorAtSuccessor } from "./time.ts";
+import {
+  actorOf,
+  draftHasExplicitTime,
+  scopeMatches,
+  stampProvenance,
+  withCanonicalId,
+} from "./server-helpers.ts";
 import {
   recordForScope,
   recordVisibleForScope,
@@ -64,7 +75,6 @@ export interface UmpServerOptions {
    */
   audit?: AuditLog;
 }
-
 export class UmpServer {
   private store: MemoryStore;
   private listeners = new Set<{ scope?: Partial<MemoryRecord["scope"]>; fn: ChangeListener }>();
@@ -121,6 +131,8 @@ export class UmpServer {
 
   async recall(req: RecallRequest): Promise<RecallResponse> {
     if (!req.query?.trim()) throw new UmpError("invalid_record", "empty query");
+    const problems = validateRecallRequest(req);
+    if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
     const results = await this.store.search(req);
     const filtered = [];
     for (const result of results) {
@@ -173,6 +185,13 @@ export class UmpServer {
     if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
 
     let record = this.materialize(draft);
+    // Re-validate defaults as a complete interval. For example, a supplied
+    // past `valid_to` with an omitted `valid_from` must not become an inverted
+    // now→past window after materialization.
+    const materializedProblems = validateDraft({ ...record, id: undefined });
+    if (materializedProblems.length) {
+      throw new UmpError("invalid_record", materializedProblems.join("; "));
+    }
 
     // Consent: refuse to store non-exportable public records (policy example).
     if (record.consent?.exportable === false && record.scope.visibility === "public") {
@@ -186,11 +205,16 @@ export class UmpServer {
     }
 
     // Dedup → merge.
-    const dup = await this.store.findDuplicate(record);
+    const writeOptions = { explicitTime: draftHasExplicitTime(draft) };
+    const dup = await this.store.findDuplicate(record, writeOptions);
     if (dup) {
       const merged = this.mergeEvidence(dup, record);
-      const mergedId = (await this.store.put(merged)) || merged.id;
-      this.emit({ type: "merged", id: mergedId, record: merged });
+      const mergedId = (await this.store.put(merged, writeOptions)) || merged.id;
+      this.emit({
+        type: "merged",
+        id: mergedId,
+        record: withCanonicalId(merged, mergedId),
+      });
       await this.record({
         op: "remember",
         actor: actorOf(record.provenance),
@@ -202,8 +226,8 @@ export class UmpServer {
     }
 
     record = this.finalize(record);
-    const id = (await this.store.put(record)) || record.id;
-    this.emit({ type: "created", id, record });
+    const id = (await this.store.put(record, writeOptions)) || record.id;
+    this.emit({ type: "created", id, record: withCanonicalId(record, id) });
     await this.record({
       op: "remember",
       actor: actorOf(record.provenance),
@@ -215,6 +239,20 @@ export class UmpServer {
   }
 
   async revise(req: ReviseRequest): Promise<ReviseResponse> {
+    // A successor is newly authored by this server. Validate every supplied
+    // temporal field before doing any write, then reject `created` rather than
+    // silently ignoring an attempt to backdate its authorship.
+    const patchTimeProblems = validateTime(req.patch.time);
+    if (patchTimeProblems.length) {
+      throw new UmpError("invalid_record", patchTimeProblems.join("; "));
+    }
+    if (req.patch.time?.created !== undefined) {
+      throw new UmpError(
+        "invalid_record",
+        "time.created is assigned by the server for a successor record",
+      );
+    }
+
     const prior = await this.peek(req.id);
     const nowIso = this.iso();
 
@@ -230,7 +268,7 @@ export class UmpServer {
       provenance: stampProvenance(prior, req.actor, "revise"),
       time: {
         created: nowIso,
-        observed: nowIso,
+        observed: req.patch.time?.observed ?? nowIso,
         valid_from: req.patch.time?.valid_from ?? nowIso,
         valid_to: req.patch.time?.valid_to ?? null,
       },
@@ -244,19 +282,35 @@ export class UmpServer {
     const problems = validateDraft({ ...draft, id: undefined });
     if (problems.length) throw new UmpError("invalid_record", problems.join("; "));
 
+    // A later successor may leave a gap after an already-bounded prior. We
+    // preserve that earlier expiry rather than extending the old assertion.
+    const closure = closePriorAtSuccessor(prior.time, draft.time);
+    if (closure.problems.length || !closure.time) {
+      throw new UmpError("invalid_record", closure.problems.join("; "));
+    }
+    const closedTime = closure.time;
+    const closedProblems = validateTime(closedTime);
+    if (closedProblems.length) {
+      throw new UmpError("invalid_record", closedProblems.join("; "));
+    }
+
     const successor = this.finalize(draft);
     const successorId = (await this.store.put(successor)) || successor.id;
+    const canonicalSuccessor = withCanonicalId(successor, successorId);
 
-    // Close the prior: set valid_to + superseded_by (non-destructive).
+    // Close the prior at the successor's asserted start, retaining an existing
+    // equal endpoint. Persisting the successor happens first because the
+    // MemoryStore contract has no cross-record transaction; adapters with a
+    // native transaction should wrap these two writes.
     const closed: MemoryRecord = {
       ...prior,
-      time: { ...prior.time, valid_to: prior.time.valid_to ?? nowIso },
-      superseded_by: [successor.id, ...(prior.superseded_by ?? [])],
+      time: closedTime,
+      superseded_by: [successorId, ...(prior.superseded_by ?? [])],
       integrity: undefined,
     };
     await this.store.put(this.finalize(closed));
 
-    this.emit({ type: "revised", id: successorId, record: successor });
+    this.emit({ type: "revised", id: successorId, record: canonicalSuccessor });
     await this.record({
       op: "revise",
       actor: req.actor,
@@ -434,41 +488,4 @@ export class UmpServer {
     };
     return this.finalize(merged);
   }
-}
-
-/** Extract an audit actor from a record's provenance, if any. */
-function actorOf(provenance?: Provenance): AuditActor | undefined {
-  if (!provenance?.actor) return undefined;
-  return { did: provenance.actor, kind: provenance.actor_kind };
-}
-
-/**
- * Build provenance attributing a `revise`/`forget` to the acting principal.
- * With no actor supplied, the prior record's provenance is preserved (so
- * behavior is unchanged for callers that don't pass one).
- */
-function stampProvenance(
-  prior: MemoryRecord,
-  actor: AuditActor | undefined,
-  method: string,
-): Provenance | undefined {
-  if (!actor?.did) return prior.provenance;
-  return {
-    actor: actor.did,
-    actor_kind: actor.kind ?? "user",
-    method,
-    source: { ref: prior.id },
-    ...(prior.provenance?.evidence ? { evidence: prior.provenance.evidence } : {}),
-  };
-}
-
-/** Does a subscription filter (subset) match a record's scope? */
-function scopeMatches(
-  filter: Partial<MemoryRecord["scope"]> | undefined,
-  scope: MemoryRecord["scope"],
-): boolean {
-  if (!filter) return true;
-  return (Object.keys(filter) as (keyof MemoryRecord["scope"])[]).every(
-    (k) => filter[k] === undefined || filter[k] === scope[k],
-  );
 }

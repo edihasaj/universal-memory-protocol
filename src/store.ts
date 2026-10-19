@@ -13,6 +13,16 @@ import type {
   RecallResult,
 } from "./types.ts";
 import { recordVisibleForScope } from "./policy.ts";
+import { rfc3339Timestamp } from "./time.ts";
+
+/**
+ * Internal write provenance. This is not part of the portable UMP wire record:
+ * it lets adapters distinguish server-materialized timestamps from timestamps
+ * explicitly supplied by a caller that must not be flattened.
+ */
+export interface MemoryWriteOptions {
+  explicitTime?: boolean;
+}
 
 export interface MemoryStore {
   /**
@@ -20,19 +30,22 @@ export interface MemoryStore {
    * by engines like Recall that assign their own ids); when it returns void the
    * server keeps the record's existing id.
    */
-  put(record: MemoryRecord): Promise<void | string>;
+  put(record: MemoryRecord, options?: MemoryWriteOptions): Promise<void | string>;
   get(id: string): Promise<MemoryRecord | undefined>;
   /** All records (engines override search; default loops this). */
   all(): Promise<MemoryRecord[]>;
   search(req: RecallRequest): Promise<RecallResult[]>;
   /** Find an existing record with identical body+scope (dedup). */
-  findDuplicate(record: MemoryRecord): Promise<MemoryRecord | undefined>;
+  findDuplicate(
+    record: MemoryRecord,
+    options?: MemoryWriteOptions,
+  ): Promise<MemoryRecord | undefined>;
 }
 
 export class InMemoryStore implements MemoryStore {
   private records = new Map<string, MemoryRecord>();
 
-  async put(record: MemoryRecord): Promise<void> {
+  async put(record: MemoryRecord, _options?: MemoryWriteOptions): Promise<void> {
     this.records.set(record.id, record);
   }
 
@@ -44,10 +57,22 @@ export class InMemoryStore implements MemoryStore {
     return [...this.records.values()];
   }
 
-  async findDuplicate(record: MemoryRecord): Promise<MemoryRecord | undefined> {
+  async findDuplicate(
+    record: MemoryRecord,
+    options?: MemoryWriteOptions,
+  ): Promise<MemoryRecord | undefined> {
+    // Explicit temporal assertions are evidence with their own history. Keep
+    // each rather than merging an interval or observation window away.
+    if (options?.explicitTime !== false) return undefined;
     const key = dedupeKey(record);
     for (const r of this.records.values()) {
-      if (dedupeKey(r) === key && r.lifecycle?.status !== "tombstoned") return r;
+      if (
+        dedupeKey(r) === key &&
+        r.lifecycle?.status !== "tombstoned" &&
+        isDefaultOpenRecordAt(r, record.time.valid_from ?? record.time.created)
+      ) {
+        return r;
+      }
     }
     return undefined;
   }
@@ -146,6 +171,27 @@ function validAtMatches(r: MemoryRecord, at: string): boolean {
   const to = r.time.valid_to ? Date.parse(r.time.valid_to) : Infinity;
   return from <= t && t <= to;
 }
+
+/**
+ * An undated write can merge only into an open default-shaped record that was
+ * current at the incoming write's server-generated validity instant. This
+ * avoids flattening a future, expired, or bounded historical assertion.
+ */
+function isDefaultOpenRecordAt(record: MemoryRecord, at: string): boolean {
+  const from = record.time.valid_from ?? record.time.created;
+  const observed = record.time.observed ?? record.time.created;
+  const fromTimestamp = rfc3339Timestamp(from);
+  const atTimestamp = rfc3339Timestamp(at);
+  return (
+    (record.time.valid_to === undefined || record.time.valid_to === null) &&
+    observed === record.time.created &&
+    from === record.time.created &&
+    fromTimestamp !== undefined &&
+    atTimestamp !== undefined &&
+    fromTimestamp <= atTimestamp
+  );
+}
+
 
 function recencyScore(r: MemoryRecord, at: string): number {
   const now = Date.parse(at);

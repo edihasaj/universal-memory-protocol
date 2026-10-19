@@ -12,7 +12,11 @@ export {
   type KeyPair,
 } from "./integrity.ts";
 export { randomId, contentId, isUmpId, isAmpId } from "./id.ts";
-export { InMemoryStore, type MemoryStore } from "./store.ts";
+export {
+  InMemoryStore,
+  type MemoryStore,
+  type MemoryWriteOptions,
+} from "./store.ts";
 export { MirrorStore } from "./stores/mirror.ts";
 export { JsonFileStore } from "./stores/file.ts";
 export { MarkdownDirectoryStore } from "./stores/markdown.ts";
@@ -59,7 +63,17 @@ export {
 } from "./audit.ts";
 export { JsonlAuditLog } from "./audit-file.ts";
 export { rehydrate, type RehydrateOptions } from "./rehydrate.ts";
-export { validateDraft, isValidDraft } from "./validate.ts";
+export {
+  validateDraft,
+  isValidDraft,
+  validateTime,
+  validateRecallRequest,
+} from "./validate.ts";
+export {
+  isRfc3339,
+  rfc3339Timestamp,
+  closePriorAtSuccessor,
+} from "./time.ts";
 export {
   recordForScope,
   recordVisibleForScope,

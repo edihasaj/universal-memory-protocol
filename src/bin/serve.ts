@@ -18,7 +18,7 @@ import { createHttpServer } from "../bindings/http.ts";
 const key = generateKeyPair();
 const ump = new UmpServer({
   name: "ump-ref",
-  version: "1.0.2",
+  version: "1.0.3",
   conformance: "L2",
   store: new InMemoryStore(),
   key,
@@ -31,6 +31,6 @@ if (httpPort) {
   });
 }
 
-const mcp = createMcpServer(ump);
+const mcp = createMcpServer(ump, { owner: key.did });
 await mcp.connect(new StdioServerTransport());
 process.stderr.write(`[ump] MCP binding on stdio (owner ${key.did})\n`);

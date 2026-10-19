@@ -1,4 +1,8 @@
-import { InMemoryStore, type MemoryStore } from "../store.ts";
+import {
+  InMemoryStore,
+  type MemoryStore,
+  type MemoryWriteOptions,
+} from "../store.ts";
 import type { MemoryRecord, RecallRequest, RecallResult } from "../types.ts";
 
 /**
@@ -13,8 +17,8 @@ export abstract class MirrorStore implements MemoryStore {
     for (const record of records) await this.inner.put(record);
   }
 
-  async put(record: MemoryRecord): Promise<void> {
-    await this.inner.put(record);
+  async put(record: MemoryRecord, options?: MemoryWriteOptions): Promise<void> {
+    await this.inner.put(record, options);
     await this.persist(record);
   }
 
@@ -30,8 +34,11 @@ export abstract class MirrorStore implements MemoryStore {
     return this.inner.search(req);
   }
 
-  findDuplicate(record: MemoryRecord): Promise<MemoryRecord | undefined> {
-    return this.inner.findDuplicate(record);
+  findDuplicate(
+    record: MemoryRecord,
+    options?: MemoryWriteOptions,
+  ): Promise<MemoryRecord | undefined> {
+    return this.inner.findDuplicate(record, options);
   }
 
   protected abstract persist(record: MemoryRecord): Promise<void>;

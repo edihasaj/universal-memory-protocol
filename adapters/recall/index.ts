@@ -9,6 +9,8 @@ export {
   recordToRecallCapture,
   recallTypeToKind,
   kindToRecallType,
+  toUmpId,
+  fromUmpId,
   toAmpId,
   fromAmpId,
   type RecallMemory,

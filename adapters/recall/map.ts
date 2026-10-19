@@ -38,8 +38,15 @@ export interface RecallMemory {
   updated_at?: string;
   last_validated_at?: string | null;
   evidence?: Array<{ ref?: string; context?: string }>;
-  /** Recall capture-context; carries the original UMP kind to preserve fidelity. */
-  capture_context?: { ump_kind?: string } | null;
+  /**
+   * Recall capture context. Faithful writes retain the complete original UMP
+   * record here because Recall's native row shape has no fields for validity,
+   * structured bodies, relations, or protocol provenance.
+   */
+  capture_context?: {
+    ump_kind?: string;
+    ump_record?: MemoryRecord;
+  } | null;
 }
 
 const TYPE_TO_KIND: Record<RecallType, MemoryKind> = {
@@ -69,6 +76,9 @@ export function kindToRecallType(k: MemoryKind): RecallType {
 
 /** Map a Recall memory row → an UMP Memory Record. */
 export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryRecord {
+  const preserved = m.capture_context?.ump_record;
+  if (preserved) return canonicalRecord(preserved, m);
+
   const status =
     m.status === "active" ? "active" : m.status === "rejected" ? "tombstoned" : "candidate";
   const created = m.created_at ?? new Date(0).toISOString();
@@ -77,7 +87,9 @@ export function recallMemoryToRecord(m: RecallMemory, owner: string): MemoryReco
     id: toUmpId(m.id),
     // Prefer the original UMP kind (preserved in capture-context); fall back to
     // mapping Recall's native type when it was not written through UMP.
-    kind: (m.capture_context?.ump_kind as MemoryRecord["kind"]) ?? recallTypeToKind(m.type),
+    kind: isMemoryKind(m.capture_context?.ump_kind)
+      ? m.capture_context.ump_kind
+      : recallTypeToKind(m.type),
     body: { text: m.text },
     scope: {
       owner,
@@ -112,12 +124,41 @@ export function recordToRecallCapture(d: MemoryDraft): {
   type: RecallType;
   repo?: string;
   path?: string;
+  ump_record?: MemoryRecord;
 } {
   return {
     text: d.body.text,
     type: kindToRecallType(d.kind),
     repo: d.scope?.project,
     path: undefined,
+    ump_record: isMemoryRecord(d) ? d : undefined,
+  };
+}
+
+/**
+ * Restore the complete UMP record saved by a faithful backend, while treating
+ * Recall's canonical id, text, and rejection state as authoritative.
+ */
+function canonicalRecord(saved: MemoryRecord, native: RecallMemory): MemoryRecord {
+  const id = toUmpId(native.id);
+  const text = native.text;
+  const rejected = native.status === "rejected";
+  const changed = saved.id !== id || saved.body.text !== text ||
+    (rejected && saved.lifecycle?.status !== "tombstoned");
+  const lifecycle = {
+    ...saved.lifecycle,
+    status: rejected
+      ? "tombstoned" as const
+      : saved.lifecycle?.status ?? "active" as const,
+  };
+  return {
+    ...structuredClone(saved),
+    id,
+    body: { ...saved.body, text },
+    lifecycle,
+    // An integrity signature covers the record id and body. Native ids are
+    // usually assigned after the UMP write, so never return a stale signature.
+    integrity: changed ? undefined : saved.integrity,
   };
 }
 
@@ -150,6 +191,21 @@ function recallSourceToActor(source?: string): ActorKind {
 
 function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
+}
+
+function isMemoryKind(value: unknown): value is MemoryKind {
+  return ["semantic", "episodic", "procedural", "working", "identity"].includes(
+    value as MemoryKind,
+  );
+}
+
+function isMemoryRecord(value: MemoryDraft): value is MemoryRecord {
+  return (
+    value.ump === UMP_VERSION &&
+    typeof value.id === "string" &&
+    value.time?.created !== undefined &&
+    value.time?.valid_from !== undefined
+  );
 }
 
 // lowercase base32 (a-z2-7) of a utf-8 string - matches urn:ump:<base32>,

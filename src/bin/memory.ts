@@ -49,7 +49,7 @@ const audit = auditOn
 
 const server = new UmpServer({
   name: "ump-memory",
-  version: "1.0.2",
+  version: "1.0.3",
   conformance: "L2",
   store,
   key,
@@ -63,7 +63,7 @@ if (httpPort) {
   });
 }
 
-await createMcpServer(server).connect(new StdioServerTransport());
+await createMcpServer(server, { owner: key.did }).connect(new StdioServerTransport());
 log(`MCP binding on stdio`);
 log(`data ${dir}  store ${storeKind}  audit ${audit ? "on" : "off"}  owner ${key.did}`);
 

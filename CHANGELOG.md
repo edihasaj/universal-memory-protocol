@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 1.0.3 - 2026-10-19
+
+### Fixed
+- Preserve dated records through capable Recall backends and filter validity,
+  scope, kind and status before applying the requested result limit.
+- Preserve historical validity and canonical successor links when revising
+  records, and reject inconsistent revision windows before writing.
+- Reject unsupported temporal writes instead of silently discarding dates.
+
+### Clarified
+- Expose temporal write and query fields in MCP tool schemas, with guidance
+  distinguishing observation time, asserted validity and historical queries.
+- Document the temporal backend contract and the limits of automatic capture.
+
 ## 1.0.2 - 2026-10-19
 
 ### Fixed

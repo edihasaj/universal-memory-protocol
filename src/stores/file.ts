@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { fromJson, toJson } from "../bindings/file.ts";
-import type { MemoryStore } from "../store.ts";
+import type { MemoryStore, MemoryWriteOptions } from "../store.ts";
 import type { MemoryRecord, RecallRequest, RecallResult } from "../types.ts";
 import { MirrorStore } from "./mirror.ts";
 
@@ -28,8 +28,8 @@ export class JsonFileStore implements MemoryStore {
     return store;
   }
 
-  async put(record: MemoryRecord): Promise<void> {
-    await this.inner.put(record);
+  async put(record: MemoryRecord, options?: MemoryWriteOptions): Promise<void> {
+    await this.inner.put(record, options);
     this.writeQueue = this.writeQueue.then(() => this.flush());
     await this.writeQueue;
   }
@@ -46,8 +46,11 @@ export class JsonFileStore implements MemoryStore {
     return this.inner.search(req);
   }
 
-  findDuplicate(record: MemoryRecord): Promise<MemoryRecord | undefined> {
-    return this.inner.findDuplicate(record);
+  findDuplicate(
+    record: MemoryRecord,
+    options?: MemoryWriteOptions,
+  ): Promise<MemoryRecord | undefined> {
+    return this.inner.findDuplicate(record, options);
   }
 
   private async load(): Promise<void> {
