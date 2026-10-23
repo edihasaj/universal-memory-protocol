@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.0.5 - 2026-10-23
+
+### Security
+- Require `@modelcontextprotocol/sdk` ^1.32.1, which brings patched `hono`,
+  `@hono/node-server`, `fast-uri`, `ip-address`, `proxy-addr`, `qs` and
+  `body-parser`.
+- Build and test with `vite` ^7.3.7, `vitest` ^4.1.12 and `esbuild` 0.28.1.
+
 ## 1.0.4 - 2026-10-20
 
 ### Fixed
